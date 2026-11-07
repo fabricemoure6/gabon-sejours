@@ -181,3 +181,10 @@ table small{color:var(--muted)}
 .cbody small{color:var(--muted)}
 .linklike{background:none;box-shadow:none;color:var(--c-hotel);padding:0;font-size:.85rem;font-weight:700}
 @media(max-width:600px){.social{margin:0 12px 30px;padding:16px}}
+
+/* Messages visibles (succès / erreur) */
+.notice{position:fixed;left:50%;top:78px;transform:translateX(-50%);z-index:100;max-width:min(92vw,640px);display:flex;gap:14px;align-items:center;
+  padding:14px 18px;border-radius:14px;font-weight:700;box-shadow:0 18px 40px -12px rgba(0,0,0,.5);color:#fff;background:#1c7a3f}
+.notice.err{background:#b8433a}
+.notice button{background:rgba(255,255,255,.2);box-shadow:none;padding:4px 10px;border-radius:8px;color:#fff}
+.notice strong{text-decoration:underline}

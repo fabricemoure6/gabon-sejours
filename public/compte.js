@@ -35,6 +35,21 @@ function renderAuth(mode = 'login') {
 }
 
 // ---------- Tableau de bord ----------
+// Bandeau de message visible en haut de page (succès ou erreur)
+let pending = null;
+function notice(msg, kind = 'ok') {
+  let el = document.getElementById('notice');
+  if (!el) {
+    el = document.createElement('div'); el.id = 'notice'; el.className = 'notice'; el.setAttribute('role', 'alert');
+    document.body.appendChild(el);
+  }
+  el.className = 'notice ' + kind;
+  el.innerHTML = `<span>${msg}</span><button type="button" aria-label="Fermer">✕</button>`;
+  el.querySelector('button').onclick = () => el.remove();
+  clearTimeout(el._t); el._t = setTimeout(() => el.remove(), kind === 'ok' ? 8000 : 15000);
+}
+const safe = fn => async (...a) => { try { await fn(...a); } catch (err) { notice(esc(err.message || 'Une erreur est survenue. Réessayez.'), 'err'); } };
+
 async function renderDashboard() {
   const [sub, listings, plans] = await Promise.all([
     api('/api/my/subscription'), api('/api/my/listings'), api('/api/plans')
@@ -70,7 +85,7 @@ async function renderDashboard() {
     </section>
 
     <section class="card-box">
-      <div class="head-row"><h2>Mes annonces</h2><button type="button" id="new-listing">Nouvelle annonce</button></div>
+      <div class="head-row" id="mine"><h2>Mes annonces</h2><button type="button" id="new-listing">Nouvelle annonce</button></div>
       <div id="form-zone"></div>
       ${listings.length ? `<div class="my-list">${listings.map(l => `
         <div class="my-item">
@@ -92,12 +107,16 @@ async function renderDashboard() {
   $('#logout').addEventListener('click', async () => { await api('/api/auth/logout', { method: 'POST' }); me = null; await start(); });
   $('#new-listing').addEventListener('click', () => openForm(null));
   $$('[data-edit]').forEach(b => b.addEventListener('click', () => openForm(listings.find(l => l.id === b.dataset.edit))));
-  $$('[data-toggle]').forEach(b => b.addEventListener('click', async () => {
-    await api(`/api/my/listings/${b.dataset.toggle}/status`, { json: { status: b.dataset.status } }); renderDashboard();
-  }));
+  $$('[data-toggle]').forEach(b => b.addEventListener('click', safe(async () => {
+    b.disabled = true;
+    await api(`/api/my/listings/${b.dataset.toggle}/status`, { json: { status: b.dataset.status } });
+    await renderDashboard();
+    notice(b.dataset.status === 'published' ? '✅ Annonce publiée : elle est visible sur le site.' : 'Annonce masquée : elle n\'est plus visible sur le site.');
+  })));
   $$('[data-del]').forEach(b => b.addEventListener('click', async () => {
     if (!confirm('Supprimer définitivement cette annonce et ses photos ?')) return;
-    await api(`/api/my/listings/${b.dataset.del}`, { method: 'DELETE' }); renderDashboard();
+    try { await api(`/api/my/listings/${b.dataset.del}`, { method: 'DELETE' }); await renderDashboard(); notice('Annonce supprimée.'); }
+    catch (err) { notice(esc(err.message), 'err'); }
   }));
   $$('[data-plan]').forEach(b => b.addEventListener('click', () => checkout(b.dataset.plan)));
   $$('[data-pay]').forEach(b => b.addEventListener('click', () => showPayPanel({ id: b.dataset.pay, reference: b.dataset.ref, amount: Number(b.dataset.amount), manual: true })));
@@ -156,7 +175,7 @@ async function openForm(l) {
   if (!options) options = await api('/api/options');
   const zone = $('#form-zone');
   zone.innerHTML = `
-    <form id="listing" class="stack form-box">
+    <form id="listing" class="stack form-box" novalidate>
       <h3>${l ? 'Modifier l\'annonce' : 'Nouvelle annonce'}</h3>
       <label>Titre de l'annonce<input name="title" required minlength="5" maxlength="120" placeholder="Ex. Studio meublé climatisé à Glass"></label>
       <div class="two-col">
@@ -176,8 +195,8 @@ async function openForm(l) {
         ${options.amenities.map(a => `<label><input type="checkbox" name="amenities" value="${esc(a)}"> ${esc(a)}</label>`).join('')}
       </fieldset>
       <div class="two-col">
-        <label>Téléphone<input name="phone" type="tel" placeholder="+241 …"></label>
-        <label>WhatsApp (avec l'indicatif)<input name="whatsapp" type="tel" placeholder="24106…"></label>
+        <label>Téléphone <small>(obligatoire si pas de WhatsApp)</small><input name="phone" type="tel" placeholder="+241 …"></label>
+        <label>WhatsApp avec l'indicatif <small>(obligatoire si pas de téléphone)</small><input name="whatsapp" type="tel" placeholder="24106…"></label>
       </div>
       <div>
         <label>Photos (8 maximum)
@@ -219,16 +238,37 @@ async function openForm(l) {
   });
   f.addEventListener('submit', async e => {
     e.preventDefault();
+    const btn = f.querySelector('button[type=submit]');
+    if (!f.checkValidity()) {
+      const bad = [...f.querySelectorAll(':invalid')].map(x => (x.closest('label') ? x.closest('label').firstChild.textContent : x.name).trim()).filter(Boolean);
+      const first = f.querySelector(':invalid');
+      notice('Complétez ces champs avant de publier : <strong>' + esc(bad.join(', ')) + '</strong>.', 'err');
+      flash($('#lfb'), 'Champs à compléter : ' + bad.join(', '), 'err');
+      if (first) { first.scrollIntoView({ behavior: 'smooth', block: 'center' }); first.focus(); }
+      return;
+    }
+    if (!f.phone.value.trim() && !f.whatsapp.value.trim()) {
+      notice('Indiquez <strong>un numéro de téléphone ou de WhatsApp</strong> : les visiteurs en ont besoin pour vous contacter.', 'err');
+      flash($('#lfb'), 'Indiquez un téléphone ou un numéro WhatsApp', 'err');
+      f.phone.scrollIntoView({ behavior: 'smooth', block: 'center' }); f.phone.focus();
+      return;
+    }
     const fd = new FormData(f);
     const body = Object.fromEntries(fd);
     body.amenities = fd.getAll('amenities');
     body.photoIds = photoIds;
+    const label = btn.textContent; btn.disabled = true; btn.textContent = 'Publication en cours…';
     try {
+      const wasEdit = !!editingId;
       if (editingId) await api(`/api/my/listings/${editingId}`, { method: 'PUT', json: body });
       else await api('/api/my/listings', { json: body });
       await renderDashboard();
+      notice(wasEdit ? '✅ Annonce enregistrée.' : '✅ Annonce publiée ! Elle est visible tout de suite sur le site (voir « Mes annonces »).');
+      const lst = document.getElementById('mine'); if (lst) lst.scrollIntoView({ behavior: 'smooth' });
     } catch (err) {
+      btn.disabled = false; btn.textContent = label;
       flash($('#lfb'), err.message, 'err');
+      notice(esc(err.message), 'err');
       if (err.data && err.data.code === 'limit') $('#sub-box').scrollIntoView({ behavior: 'smooth' });
     }
   });
