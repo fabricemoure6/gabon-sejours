@@ -1,0 +1,54 @@
+{
+  "_note": "Coordonnées APPROXIMATIVES (centre du quartier, à ±1 km). Arrondissements : source = listes électorales publiées dans L'Union (2018) ; null = non confirmé. À vérifier avant mise en production.",
+  "center": { "name": "Centre-ville de Libreville", "lat": 0.3925, "lng": 9.4490 },
+  "zones": [
+    { "id": "centre", "name": "Centre et front de mer", "description": "Administrations, ambassades, restaurants, bord de mer." },
+    { "id": "nord", "name": "Nord, universités et aéroport", "description": "Nkembo, Sotega, Okala, Haut de Gué-Gué, proche de l'aéroport Léon Mba." },
+    { "id": "est", "name": "Est et axe des PK", "description": "Quartiers populaires et résidentiels le long de la route nationale." },
+    { "id": "grand", "name": "Grand Libreville", "description": "Communes voisines : Akanda, Owendo, Ntoum, Pointe-Denis." }
+  ],
+  "neighborhoods": [
+    { "id": "glass", "name": "Glass", "zone": "centre", "arrondissement": "4e", "lat": 0.390, "lng": 9.452 },
+    { "id": "centre-ville", "name": "Centre-ville (Poste Centrale)", "zone": "centre", "arrondissement": "4e", "lat": 0.392, "lng": 9.449 },
+    { "id": "louis", "name": "Quartier Louis", "zone": "centre", "arrondissement": null, "lat": 0.385, "lng": 9.446 },
+    { "id": "batterie-iv", "name": "Batterie IV", "zone": "centre", "arrondissement": null, "lat": 0.402, "lng": 9.450 },
+    { "id": "nombakele", "name": "Nombakélé", "zone": "centre", "arrondissement": "3e/4e", "lat": 0.383, "lng": 9.459 },
+    { "id": "baraka", "name": "Baraka", "zone": "centre", "arrondissement": "4e", "lat": 0.388, "lng": 9.456 },
+    { "id": "plaine-niger", "name": "Plaine Niger", "zone": "centre", "arrondissement": "4e", "lat": 0.385, "lng": 9.458 },
+    { "id": "awendje", "name": "Awendjé", "zone": "centre", "arrondissement": "4e", "lat": 0.372, "lng": 9.462 },
+    { "id": "akebe", "name": "Akébé", "zone": "centre", "arrondissement": "3e/4e", "lat": 0.375, "lng": 9.465 },
+    { "id": "mont-bouet", "name": "Mont-Bouët", "zone": "centre", "arrondissement": null, "lat": 0.393, "lng": 9.460 },
+    { "id": "petit-paris", "name": "Petit-Paris", "zone": "centre", "arrondissement": "3e", "lat": 0.395, "lng": 9.462 },
+    { "id": "montagne-sainte", "name": "Montagne Sainte", "zone": "centre", "arrondissement": "3e", "lat": 0.398, "lng": 9.466 },
+    { "id": "cointet", "name": "Cointet", "zone": "centre", "arrondissement": "3e", "lat": 0.393, "lng": 9.468 },
+    { "id": "la-peyrie", "name": "La Peyrie", "zone": "centre", "arrondissement": "3e", "lat": 0.389, "lng": 9.472 },
+
+    { "id": "nkembo", "name": "Nkembo", "zone": "nord", "arrondissement": "2e", "lat": 0.412, "lng": 9.457 },
+    { "id": "sotega", "name": "Sotega", "zone": "nord", "arrondissement": "2e", "lat": 0.418, "lng": 9.455 },
+    { "id": "avea", "name": "Avéa", "zone": "nord", "arrondissement": "2e", "lat": 0.409, "lng": 9.452 },
+    { "id": "atong-abe", "name": "Atong-Abé", "zone": "nord", "arrondissement": "2e", "lat": 0.415, "lng": 9.447 },
+    { "id": "cocotiers", "name": "Cocotiers", "zone": "nord", "arrondissement": "2e", "lat": 0.425, "lng": 9.440 },
+    { "id": "rio", "name": "Rio", "zone": "nord", "arrondissement": "2e", "lat": 0.430, "lng": 9.437 },
+    { "id": "uob", "name": "Université Omar Bongo", "zone": "nord", "arrondissement": "2e", "lat": 0.433, "lng": 9.428 },
+    { "id": "ancienne-sobraga", "name": "Ancienne Sobraga", "zone": "nord", "arrondissement": "1er", "lat": 0.426, "lng": 9.443 },
+    { "id": "plaine-orety", "name": "Plaine-Orety", "zone": "nord", "arrondissement": "1er", "lat": 0.435, "lng": 9.440 },
+    { "id": "okala", "name": "Okala", "zone": "nord", "arrondissement": "1er", "lat": 0.445, "lng": 9.440 },
+    { "id": "mikolongo", "name": "Mikolongo", "zone": "nord", "arrondissement": "1er", "lat": 0.444, "lng": 9.431 },
+    { "id": "haut-de-gue-gue", "name": "Haut de Gué-Gué", "zone": "nord", "arrondissement": "1er", "lat": 0.447, "lng": 9.423 },
+    { "id": "aeroport", "name": "Aéroport Léon Mba", "zone": "nord", "arrondissement": "1er", "lat": 0.458, "lng": 9.412 },
+
+    { "id": "nzeng-ayong", "name": "Nzeng-Ayong", "zone": "est", "arrondissement": "6e", "lat": 0.416, "lng": 9.485 },
+    { "id": "lalala", "name": "Lalala", "zone": "est", "arrondissement": "5e", "lat": 0.423, "lng": 9.476 },
+    { "id": "melen", "name": "Melen", "zone": "est", "arrondissement": "5e", "lat": 0.425, "lng": 9.490 },
+    { "id": "oveng", "name": "Oveng", "zone": "est", "arrondissement": "5e", "lat": 0.429, "lng": 9.490 },
+    { "id": "mindoube", "name": "Mindoubé", "zone": "est", "arrondissement": "5e", "lat": 0.435, "lng": 9.495 },
+    { "id": "cite-damas", "name": "Cité Damas", "zone": "est", "arrondissement": "5e", "lat": 0.445, "lng": 9.500 },
+    { "id": "pk12", "name": "PK 12", "zone": "est", "arrondissement": "5e", "lat": 0.470, "lng": 9.540 },
+
+    { "id": "akanda", "name": "Akanda", "zone": "grand", "arrondissement": "Commune d'Akanda", "lat": 0.510, "lng": 9.380 },
+    { "id": "angondje", "name": "Angondjé", "zone": "grand", "arrondissement": "Commune d'Akanda", "lat": 0.480, "lng": 9.440 },
+    { "id": "owendo", "name": "Owendo", "zone": "grand", "arrondissement": "Commune d'Owendo", "lat": 0.290, "lng": 9.500 },
+    { "id": "ntoum", "name": "Ntoum", "zone": "grand", "arrondissement": "Commune de Ntoum", "lat": 0.390, "lng": 9.760 },
+    { "id": "pointe-denis", "name": "Pointe-Denis", "zone": "grand", "arrondissement": "Pointe-Denis", "lat": 0.280, "lng": 9.320 }
+  ]
+}

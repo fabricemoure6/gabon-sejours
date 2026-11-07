@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b6b3a">
+  <title>Gabon Séjours – Hôtels, appartements et lodges au Gabon</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="/">Gabon<span>Séjours</span></a>
+    <nav><a href="/">Hébergements</a></nav>
+  </header>
+
+  <section class="hero">
+    <h1>Trouvez votre hébergement au Gabon</h1>
+    <p>Hôtels, appartements meublés et lodges, de Libreville aux parcs nationaux.</p>
+    <form id="search" class="search">
+      <label class="f wide">Destination
+        <input name="q" type="search" placeholder="Ville, quartier ou nom">
+      </label>
+      <label class="f">Quartier de Libreville
+        <select name="neighborhood" id="neighborhood"><option value="">Tous les quartiers</option></select>
+      </label>
+      <label class="f">Type
+        <select name="type">
+          <option value="">Tous types</option>
+          <option value="hotel">Hôtel</option>
+          <option value="apartment">Appartement</option>
+          <option value="lodge">Lodge / éco-tourisme</option>
+        </select>
+      </label>
+      <label class="f">Voyageurs
+        <select name="guests">
+          <option value="1">1</option>
+          <option value="2" selected>2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+        </select>
+      </label>
+      <button type="submit">Rechercher</button>
+    </form>
+    <button type="button" id="locate" class="ghost">Autour de moi</button>
+    <p id="geo-msg" class="geo-msg" role="status"></p>
+  </section>
+
+  <main>
+    <div class="bar">
+      <span id="count"></span>
+      <label>Trier par
+        <select id="sort">
+          <option value="">Recommandé</option>
+          <option value="price">Prix croissant</option>
+          <option value="rating">Meilleure note</option>
+          <option value="center">Proche du centre-ville</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="switch" role="tablist" aria-label="Affichage">
+      <button type="button" id="show-list" class="on" role="tab" aria-selected="true">Liste</button>
+      <button type="button" id="show-map" role="tab" aria-selected="false">Carte</button>
+    </div>
+
+    <div class="layout">
+      <div id="results" class="grid"></div>
+      <div id="mapbox" class="mapbox"><div id="map" aria-label="Carte des hébergements"></div></div>
+    </div>
+
+    <section class="zones" id="zones" aria-label="Zones de Libreville"></section>
+  </main>
+
+  <footer>
+    <p>Les établissements affichés sont des exemples fictifs. Les positions des quartiers sont approximatives.</p>
+  </footer>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

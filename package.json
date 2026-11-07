@@ -1,0 +1,12 @@
+{
+  "name": "gabon-sejours",
+  "version": "1.0.0",
+  "description": "Site de recherche et de demande de réservation d'hébergements au Gabon",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
