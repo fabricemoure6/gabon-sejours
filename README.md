@@ -45,3 +45,14 @@ Tout hébergeur Node.js convient (Render, Railway, un VPS). Variable `PORT` pris
 - Base de données (SQLite ou PostgreSQL) à la place des fichiers JSON
 - Paiement mobile (Airtel Money, Moov Money) via un prestataire
 - Protection de la lecture des demandes (authentification) avant mise en production
+
+## Hébergement gratuit sur Cloudflare (Workers)
+
+Le dossier contient une version Cloudflare de l'API : `src/worker.js` + `wrangler.jsonc` (les pages de `public/` sont servies telles quelles).
+
+1. Cloudflare > Workers & Pages > Create > Import a repository (GitHub) > choisir ce dépôt.
+2. Commande de build : laisser vide. Commande de déploiement : `npx wrangler deploy`.
+3. Le site est publié sur `https://gabon-sejours.<votre-sous-domaine>.workers.dev`.
+4. (Facultatif) Conserver les demandes : Storage & databases > D1 > créer une base, puis dans le Worker > Settings > Bindings > ajouter un binding D1 nommé `DB`. La table se crée automatiquement. Sans D1, les demandes partent uniquement par WhatsApp.
+
+Test en local : `npx wrangler dev`. L'ancienne version Express (`npm start`) reste utilisable pour un hébergeur Node classique.
