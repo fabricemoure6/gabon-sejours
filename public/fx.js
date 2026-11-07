@@ -61,16 +61,6 @@
     });
   };
 
-  // Parallaxe de la scène (défilement + souris)
-  const scenes = document.querySelectorAll('.scene');
-  if (scenes.length && !reduce) {
-    let mx = 0, sy = 0, queued = false;
-    const apply = () => { queued = false; scenes.forEach(s => { s.style.setProperty('--mx', mx.toFixed(3)); s.style.setProperty('--sy', sy.toFixed(1)); }); };
-    const q = () => { if (!queued) { queued = true; requestAnimationFrame(apply); } };
-    window.addEventListener('scroll', () => { sy = Math.min(window.scrollY, 700); q(); }, { passive: true });
-    if (canHover) window.addEventListener('pointermove', e => { mx = e.clientX / window.innerWidth - 0.5; q(); }, { passive: true });
-  }
-
   // Inclinaison 3D légère des cartes (souris uniquement)
   if (canHover && !reduce) {
     document.addEventListener('pointermove', e => {

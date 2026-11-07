@@ -71,7 +71,7 @@ async function search() {
         : s.kmFromCenter != null && s.zone ? `${km1(s.kmFromCenter)} km du centre-ville` : '';
       return `
       <a class="card" href="/stay.html?id=${encodeURIComponent(s.id)}">
-        <div class="pic ${esc(s.type)}">${window.GabonArt ? GabonArt.artFor(s.type) : ''}<span class="tag">${TYPES[s.type] || ''} · ${'★'.repeat(s.stars)}</span></div>
+        <div class="pic ${esc(s.type)}"><span class="tag">${TYPES[s.type] || ''} · ${'★'.repeat(s.stars)}</span></div>
         <div class="body">
           <h3>${esc(s.name)}</h3>
           <p class="loc">${esc(s.area || '')}${s.area ? ', ' : ''}${esc(s.city)}</p>

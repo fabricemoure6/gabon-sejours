@@ -132,6 +132,11 @@ function parseListing(b) {
   return { v };
 }
 
+function heroPhotos(st) {
+  const l = Array.isArray(st.hero_photos) ? st.hero_photos : [];
+  return l.length ? l : (st.hero_photo_id ? [st.hero_photo_id] : []);
+}
+
 async function photosByListing(env, ids) {
   const map = {};
   if (!ids.length) return map;
@@ -336,7 +341,7 @@ export default {
 
       if (method === 'GET' && p === '/api/site') {
         const s = await loadSite(env);
-        return json({ texts: s.texts, sections: s.sections, settings: { hero_photo_id: s.settings.hero_photo_id, merchant_name: s.settings.merchant_name } });
+        return json({ texts: s.texts, sections: s.sections, settings: { hero_photos: heroPhotos(s.settings), dest_photos: s.settings.dest_photos || {}, merchant_name: s.settings.merchant_name } });
       }
       if (method === 'GET' && p === '/api/options') {
         return json({ categories: CATEGORIES, amenities: AMENITIES });
@@ -603,8 +608,17 @@ export default {
           if (b.settings) {
             if (typeof b.settings.airtel_number === 'string') settings.airtel_number = cleanPhone(b.settings.airtel_number);
             if (typeof b.settings.merchant_name === 'string') settings.merchant_name = cleanText(b.settings.merchant_name, 60) || 'Gabon Séjours';
-            if (typeof b.settings.hero_photo_id === 'string' && (b.settings.hero_photo_id === '' || HEX16.test(b.settings.hero_photo_id))) {
-              settings.hero_photo_id = b.settings.hero_photo_id;
+            if (Array.isArray(b.settings.hero_photos)) {
+              settings.hero_photos = b.settings.hero_photos.filter(x => typeof x === 'string' && HEX16.test(x)).slice(0, 6);
+              settings.hero_photo_id = '';
+            }
+            if (b.settings.dest_photos && typeof b.settings.dest_photos === 'object') {
+              const dp = {};
+              for (const k of ['libreville', 'loango', 'lope', 'pongara', 'mayumba', 'lambarene']) {
+                const v = b.settings.dest_photos[k];
+                if (typeof v === 'string' && HEX16.test(v)) dp[k] = v;
+              }
+              settings.dest_photos = dp;
             }
           }
           await saveSite(env, { texts, sections, settings });

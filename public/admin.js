@@ -147,17 +147,26 @@ async function plans(el) {
 async function site(el) {
   const s = await api('/api/admin/site');
   let sections = s.sections.map(x => ({ ...x }));
-  let heroId = s.settings.hero_photo_id || '';
+  let heroIds = (s.settings.hero_photos && s.settings.hero_photos.length) ? [...s.settings.hero_photos] : (s.settings.hero_photo_id ? [s.settings.hero_photo_id] : []);
+  const destIds = { ...(s.settings.dest_photos || {}) };
+  const DEST = [['libreville', 'Libreville'], ['loango', 'Parc de Loango'], ['lope', 'Parc de la Lopé'], ['pongara', 'Pongara'], ['mayumba', 'Mayumba'], ['lambarene', 'Lambaréné']];
   const draw = () => {
     el.innerHTML = `
       <h2>Textes, structure et photos</h2>
       <p class="loc">Modifiez les textes affichés sur le site (texte simple, sans mise en forme) et l'ordre des blocs de la page d'accueil.</p>
       <form id="site-form" class="stack">
-        <h3>Photo du bandeau d'accueil</h3>
+        <h3>Photos du bandeau d'accueil (diaporama, 6 maximum)</h3>
+        <p class="loc">Utilisez de vraies photos du Gabon dont vous détenez les droits (ou libres de droits). Elles défilent en fondu avec un zoom lent. Sans photo, le fond reste vert uni.</p>
         <div class="hero-pick">
-          ${heroId ? `<img class="hero-prev" src="/api/photos/${esc(heroId)}" alt="Photo du bandeau">` : '<div class="noimg">Aucune photo (fond vert uni)</div>'}
-          <div><input type="file" id="hero-file" accept="image/jpeg,image/png,image/webp">
-          ${heroId ? '<button type="button" class="small danger" id="hero-rm">Retirer la photo</button>' : ''}</div>
+          ${heroIds.map((id, i) => `<div class="hp"><img class="hero-prev" src="/api/photos/${esc(id)}" alt="Photo ${i + 1}"><button type="button" class="small danger" data-hrm="${i}">Retirer</button></div>`).join('')}
+          ${heroIds.length < 6 ? '<div><input type="file" id="hero-file" accept="image/jpeg,image/png,image/webp" multiple></div>' : ''}
+        </div>
+
+        <h3>Photos des destinations</h3>
+        <div class="dest-grid">${DEST.map(([k, n]) => `
+          <div class="dp"><strong>${n}</strong>
+            ${destIds[k] ? `<img class="hero-prev" src="/api/photos/${esc(destIds[k])}" alt="${n}"><button type="button" class="small danger" data-drm="${k}">Retirer</button>` : `<div class="noimg">Aucune photo</div>`}
+            <input type="file" data-dfile="${k}" accept="image/jpeg,image/png,image/webp"></div>`).join('')}
         </div>
 
         <h3>Structure de la page d'accueil</h3>
@@ -181,14 +190,23 @@ async function site(el) {
     $$('[data-up]', el).forEach(b => b.addEventListener('click', () => { keepTexts(); const i = +b.dataset.up; [sections[i - 1], sections[i]] = [sections[i], sections[i - 1]]; draw(); }));
     $$('[data-down]', el).forEach(b => b.addEventListener('click', () => { keepTexts(); const i = +b.dataset.down; [sections[i + 1], sections[i]] = [sections[i], sections[i + 1]]; draw(); }));
     $$('[data-vis]', el).forEach(c => c.addEventListener('change', () => { sections[+c.dataset.vis].visible = c.checked; }));
-    $('#hero-file').addEventListener('change', async e => {
-      const f = e.target.files[0];
-      if (!f) return;
-      try { flash($('#sfb'), 'Envoi de la photo…'); keepTexts(); heroId = await uploadPhotoFile(f); draw(); }
-      catch (err) { flash($('#sfb'), err.message, 'err'); }
+    const hf = $('#hero-file');
+    if (hf) hf.addEventListener('change', async e => {
+      const files = [...e.target.files].slice(0, 6 - heroIds.length);
+      try {
+        keepTexts();
+        for (const f of files) { flash($('#sfb'), 'Envoi de la photo…'); heroIds.push(await uploadPhotoFile(f)); }
+        draw();
+      } catch (err) { flash($('#sfb'), err.message, 'err'); }
     });
-    const rm = $('#hero-rm');
-    if (rm) rm.addEventListener('click', () => { keepTexts(); heroId = ''; draw(); });
+    $$('[data-hrm]', el).forEach(b => b.addEventListener('click', () => { keepTexts(); heroIds.splice(+b.dataset.hrm, 1); draw(); }));
+    $$('[data-dfile]', el).forEach(inp => inp.addEventListener('change', async () => {
+      const f = inp.files[0];
+      if (!f) return;
+      try { keepTexts(); flash($('#sfb'), 'Envoi de la photo…'); destIds[inp.dataset.dfile] = await uploadPhotoFile(f); draw(); }
+      catch (err) { flash($('#sfb'), err.message, 'err'); }
+    }));
+    $$('[data-drm]', el).forEach(b => b.addEventListener('click', () => { keepTexts(); delete destIds[b.dataset.drm]; draw(); }));
     $('#site-form').addEventListener('submit', async e => {
       e.preventDefault();
       const fd = new FormData(e.target);
@@ -196,7 +214,7 @@ async function site(el) {
       Object.keys(s.texts).forEach(k => { texts[k] = fd.get('t_' + k); });
       try {
         await api('/api/admin/site', { method: 'PUT', json: {
-          texts, sections, settings: { airtel_number: fd.get('airtel_number'), merchant_name: fd.get('merchant_name'), hero_photo_id: heroId } } });
+          texts, sections, settings: { airtel_number: fd.get('airtel_number'), merchant_name: fd.get('merchant_name'), hero_photos: heroIds, dest_photos: destIds } } });
         flash($('#sfb'), 'Modifications enregistrées. Rechargez la page d\'accueil pour les voir.');
       } catch (err) { flash($('#sfb'), err.message, 'err'); }
     });

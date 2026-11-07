@@ -33,14 +33,30 @@ async function applySite() {
       if (el) { page.appendChild(el); el.hidden = !s.visible; }
     });
   }
-  const hero = $('.hero[data-section="hero"]');
-  if (hero && site.settings.hero_photo_id) {
-    hero.style.backgroundImage = `linear-gradient(rgba(5,50,28,.72),rgba(5,50,28,.72)), url(/api/photos/${encodeURIComponent(site.settings.hero_photo_id)})`;
-    hero.style.backgroundSize = 'cover';
-    hero.classList.add('has-photo');
-    hero.style.backgroundPosition = 'center';
-  }
+  buildHeroMedia(site.settings.hero_photos || []);
+  if (window.renderDiscover) renderDiscover(site.settings.dest_photos || {});
   return site;
+}
+
+// Bandeau : diaporama de vraies photos (fondu + zoom lent) ou fond uni si aucune photo
+let slideTimer = null;
+function buildHeroMedia(ids) {
+  const box = $('.hero-media');
+  if (!box) return;
+  clearInterval(slideTimer);
+  box.classList.toggle('has-slides', ids.length > 0);
+  box.innerHTML = ids.map((id, i) =>
+    `<div class="slide${i === 0 ? ' on' : ''}" style="background-image:url(/api/photos/${encodeURIComponent(id)})"></div>`).join('') +
+    (ids.length ? '<div class="shade"></div>' : '');
+  const slides = $$('.slide', box);
+  if (slides.length > 1) {
+    let cur = 0;
+    slideTimer = setInterval(() => {
+      slides[cur].classList.remove('on');
+      cur = (cur + 1) % slides.length;
+      slides[cur].classList.add('on');
+    }, 7000);
+  }
 }
 
 // Menu de navigation selon l'état de connexion

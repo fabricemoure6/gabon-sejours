@@ -150,7 +150,7 @@ export const DEFAULT_SITE = {
     results: 'Liste et carte des hébergements',
     zones: 'Explorer par zone'
   },
-  settings: { airtel_number: '', merchant_name: 'Gabon Séjours', hero_photo_id: '' }
+  settings: { airtel_number: '', merchant_name: 'Gabon Séjours', hero_photo_id: '', hero_photos: [], dest_photos: {} }
 };
 
 export async function loadSite(env) {
