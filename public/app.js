@@ -7,15 +7,13 @@ const geoMsg = document.getElementById('geo-msg');
 const mapbox = document.getElementById('mapbox');
 const layout = document.querySelector('.layout');
 
-const fcfa = n => n.toLocaleString('fr-FR') + ' FCFA';
-const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const km1 = n => n.toLocaleString('fr-FR', { maximumFractionDigits: 1 });
 
 let near = null;        // {lat,lng} si "Autour de moi"
 let map = null, markers = null, geo = null;
 
 async function loadGeo() {
-  geo = await (await fetch('/api/neighborhoods')).json();
+  geo = await api('/api/neighborhoods');
   const sel = document.getElementById('neighborhood');
   geo.zones.forEach(z => {
     const g = document.createElement('optgroup');
@@ -24,7 +22,7 @@ async function loadGeo() {
     sel.appendChild(g);
   });
   // Bloc "Explorer par zone" : puces de quartiers cliquables
-  document.getElementById('zones').innerHTML = '<h2>Explorer Libreville par zone</h2>' + geo.zones.map(z => `
+  document.getElementById('zones').innerHTML = '<h2 data-text="zones_title">Explorer Libreville par zone</h2>' + geo.zones.map(z => `
     <div class="zone">
       <h3>${esc(z.name)}</h3>
       <p>${esc(z.description)}</p>
@@ -62,7 +60,7 @@ async function search() {
   new FormData(form).forEach((v, k) => v && p.set(k, v));
   if (sortEl.value) p.set('sort', sortEl.value);
   if (near) p.set('near', near.lat + ',' + near.lng);
-  const list = await (await fetch('/api/stays?' + p)).json();
+  const list = await api('/api/stays?' + p);
   count.textContent = list.length + ' hébergement(s)';
   if (!list.length) {
     results.innerHTML = '<div class="empty">Aucun résultat. Essayez d\'autres critères.</div>';
@@ -129,4 +127,4 @@ sortEl.addEventListener('change', search);
 form.elements.neighborhood.addEventListener('change', () => { if (map) map.invalidateSize(); });
 
 setView('list');
-loadGeo().then(() => { initMap(); return search(); });
+loadGeo().then(() => { initMap(); applySite(); return search(); });

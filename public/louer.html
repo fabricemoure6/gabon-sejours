@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b6b3a">
+  <title>Maisons à louer – Gabon Séjours</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="/">Gabon<span>Séjours</span></a>
+    <nav id="nav"></nav>
+  </header>
+
+  <section class="hero small">
+    <h1 data-text="rent_title">Maisons à louer</h1>
+    <p data-text="rent_subtitle">Maisons, villas, appartements, studios et chambres, par zone et par quartier.</p>
+    <form id="filters" class="search rent-search">
+      <label class="f">Type de bien
+        <select name="category" id="category"><option value="">Tous les biens</option></select>
+      </label>
+      <label class="f">Quartier
+        <select name="neighborhood" id="neighborhood"></select>
+      </label>
+      <label class="f">Budget maximum (FCFA)
+        <input name="maxPrice" type="number" min="0" step="1000" inputmode="numeric" placeholder="Illimité">
+      </label>
+      <label class="f">Mot-clé
+        <input name="q" type="search" placeholder="Ex. clôturé, meublé">
+      </label>
+      <button type="submit">Rechercher</button>
+    </form>
+    <button type="button" id="locate" class="ghost">Autour de moi</button>
+    <p id="geo-msg" class="geo-msg" role="status"></p>
+  </section>
+
+  <main>
+    <div class="bar">
+      <span id="count"></span>
+      <label>Trier par
+        <select id="sort">
+          <option value="">Plus récentes</option>
+          <option value="price">Prix croissant</option>
+          <option value="center">Proche du centre-ville</option>
+        </select>
+      </label>
+    </div>
+    <div id="results" class="grid"></div>
+    <section class="zones" id="zones" aria-label="Zones de Libreville"></section>
+  </main>
+
+  <footer><p data-text="footer_text"></p></footer>
+  <script src="common.js"></script>
+  <script src="louer.js"></script>
+</body>
+</html>

@@ -56,3 +56,21 @@ Le dossier contient une version Cloudflare de l'API : `src/worker.js` + `wrangle
 4. (Facultatif) Conserver les demandes : Storage & databases > D1 > créer une base, puis dans le Worker > Settings > Bindings > ajouter un binding D1 nommé `DB`. La table se crée automatiquement. Sans D1, les demandes partent uniquement par WhatsApp.
 
 Test en local : `npx wrangler dev`. L'ancienne version Express (`npm start`) reste utilisable pour un hébergeur Node classique.
+
+## Comptes, annonces, abonnements et administration (version Cloudflare)
+
+Pages : `louer.html` (annonces), `annonce.html` (fiche), `compte.html` (espace propriétaire), `admin.html` (administration).
+
+**Mise en service**
+1. Déployez le dépôt sur Cloudflare (voir plus haut). La base D1 `gabon-sejours-db` est créée automatiquement (wrangler >= 4.45) et les tables se créent au premier appel.
+2. Dans le Worker : Settings > Variables and Secrets > ajouter le secret **`ADMIN_SETUP_CODE`** (une phrase secrète longue de votre choix).
+3. Ouvrez `/admin.html` : le bloc « Première installation » apparaît tant qu'aucun administrateur n'existe. Créez-le avec ce code.
+4. Dans l'admin : onglet « Abonnements » (prix des formules, valeurs par défaut = exemples) et « Textes, structure et photos » (numéro Airtel Money, photo du bandeau, textes).
+
+**Paiement des abonnements**
+- Mode actuel : manuel. Le propriétaire paie sur votre numéro Airtel Money, saisit la référence reçue par SMS, puis vous confirmez dans l'admin (onglet Paiements). La formule est alors active 30 jours.
+- Paiement en ligne (Airtel Money, carte) : brancher un prestataire dans `startOnlinePayment()` (`src/worker.js`) et adapter le webhook `POST /api/payments/webhook` (signature HMAC avec le secret `PAYMENT_WEBHOOK_SECRET`) au format du prestataire choisi. Cela suppose d'avoir un compte marchand chez lui.
+
+**Photos** : réduites dans le navigateur (JPEG, 1280 px) puis stockées dans D1 (900 Ko max par photo, 8 par annonce). Pour un gros volume, passer à Cloudflare R2.
+
+**Limites connues** : pas de limitation du nombre de tentatives de connexion ; une annonce déjà publiée reste visible si l'abonnement expire (seule la création d'annonces est limitée) ; pas de réinitialisation de mot de passe par e-mail.

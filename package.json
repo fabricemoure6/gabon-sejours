@@ -1,12 +1,17 @@
 {
   "name": "gabon-sejours",
-  "version": "1.0.0",
-  "description": "Site de recherche et de demande de réservation d'hébergements au Gabon",
+  "version": "2.0.0",
+  "description": "Site de recherche, d'annonces et d'abonnements pour les hébergements au Gabon",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
   },
   "dependencies": {
     "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "wrangler": "^4.50.0"
   }
 }

@@ -1,6 +1,4 @@
 const TYPES = { hotel: 'Hôtel', apartment: 'Appartement', lodge: 'Lodge' };
-const fcfa = n => n.toLocaleString('fr-FR') + ' FCFA';
-const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const root = document.getElementById('detail');
 const id = new URLSearchParams(location.search).get('id');
 
@@ -82,9 +80,9 @@ async function init() {
     const fb = document.getElementById('feedback');
     const body = Object.fromEntries(new FormData(f));
     body.stayId = s.id;
-    const r = await fetch('/api/requests', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-    const data = await r.json();
-    if (!r.ok) { fb.innerHTML = `<div class="msg err">${esc(data.error)}</div>`; return; }
+    let data;
+    try { data = await api('/api/requests', { json: body }); }
+    catch (err) { fb.innerHTML = `<div class="msg err">${esc(err.message)}</div>`; return; }
     fb.innerHTML = `<div class="msg ok">Demande enregistrée. <a href="${esc(data.whatsappUrl)}" target="_blank" rel="noopener"><b>Envoyer sur WhatsApp</b></a></div>`;
     window.open(data.whatsappUrl, '_blank', 'noopener');
   });
