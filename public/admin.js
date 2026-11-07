@@ -3,9 +3,9 @@ let me = null;
 let tab = 'overview';
 const TABS = [
   ['overview', 'Tableau de bord'], ['listings', 'Annonces'], ['users', 'Utilisateurs'], ['payments', 'Paiements'],
-  ['subs', 'Abonnés'], ['comments', 'Commentaires'], ['plans', 'Formules et prix'], ['site', 'Textes, structure et photos'], ['bookings', 'Demandes de réservation']
+  ['subs', 'Abonnés'], ['comments', 'Commentaires'], ['messages', 'Messages'], ['plans', 'Formules et prix'], ['site', 'Textes, structure et photos'], ['bookings', 'Demandes de réservation']
 ];
-const STATUS = { expired: 'Expiré', published: 'Publiée', hidden: 'Masquée', pending: 'À payer', submitted: 'À vérifier', confirmed: 'Confirmé', rejected: 'Refusé', active: 'Actif', suspended: 'Suspendu' };
+const STATUS = { expired: 'Expiré', published: 'Publiée', hidden: 'Masquée', pending: 'À payer', submitted: 'À vérifier', new: 'Nouveau', read: 'Lu', done: 'Traité', confirmed: 'Confirmé', rejected: 'Refusé', active: 'Actif', suspended: 'Suspendu' };
 const badge = s => `<span class="badge ${esc(s)}">${esc(STATUS[s] || s)}</span>`;
 const date = d => d ? new Date(d).toLocaleDateString('fr-FR') : '';
 
@@ -59,7 +59,7 @@ function renderShell() {
     <section id="panel" class="card-box"></section>`;
   $$('[data-tab]').forEach(b => b.addEventListener('click', () => { tab = b.dataset.tab; renderShell(); }));
   $('#logout').addEventListener('click', async () => { await api('/api/auth/logout', { method: 'POST' }); me = null; start(); });
-  const fn = { overview, listings, users, payments, subs, comments, plans, site, bookings }[tab];
+  const fn = { overview, listings, users, payments, subs, comments, messages, plans, site, bookings }[tab];
   fn($('#panel')).catch(err => { $('#panel').innerHTML = `<div class="msg err">${esc(err.message)}</div>`; });
 }
 
@@ -67,10 +67,11 @@ async function overview(el) {
   const o = await api('/api/admin/overview');
   const tiles = [
     ['Annonces publiées', o.listings], ['Annonces masquées', o.hidden], ['Propriétaires inscrits', o.users],
-    ['Abonnements actifs', o.activeSubs], ['Paiements à traiter', o.pendingPayments], ['Demandes de réservation', o.bookingRequests]
+    ['Abonnements actifs', o.activeSubs], ['Paiements à traiter', o.pendingPayments], ['Messages non lus', o.newMessages]
   ];
   el.innerHTML = `<div class="tiles">${tiles.map(([l, n]) => `<div class="tile"><strong>${n}</strong><span>${esc(l)}</span></div>`).join('')}</div>
-    ${o.pendingPayments ? '<p class="msg err">Des paiements attendent votre vérification (onglet Paiements).</p>' : ''}`;
+    ${o.pendingPayments ? '<p class="msg err">Des paiements attendent votre vérification (onglet Paiements).</p>' : ''}
+    ${o.newMessages ? '<p class="msg err">Vous avez des messages non lus (onglet Messages).</p>' : ''}`;
 }
 
 async function listings(el) {
@@ -119,6 +120,42 @@ async function payments(el) {
   $$('[data-c]', el).forEach(b => b.addEventListener('click', async () => {
     if (b.dataset.c === 'confirm' && !confirm('Confirmer la réception du paiement et activer la formule ?')) return;
     await api(`/api/admin/payments/${b.dataset.id}/${b.dataset.c}`, { method: 'POST' }); payments(el);
+  }));
+}
+
+async function messages(el) {
+  const list = await api('/api/admin/messages');
+  const link = c => {
+    const digits = c.replace(/[^\d]/g, '');
+    if (c.includes('@')) return `<a href="mailto:${esc(c)}">${esc(c)}</a>`;
+    return digits.length >= 8 ? `${esc(c)}<br><a href="https://wa.me/${digits}" target="_blank" rel="noopener">WhatsApp</a>` : esc(c);
+  };
+  el.innerHTML = `<h2>Messages des utilisateurs (${list.length})</h2>
+    <p class="loc">Messages envoyés depuis la page Contact. Répondez ici : si l'auteur a un compte, il verra votre réponse dans « Mon compte ». Sinon, utilisez son téléphone, WhatsApp ou e-mail.</p>
+    ${list.length ? list.map(m => `<article class="msg-card ${esc(m.status)}">
+      <header><div><strong>${esc(m.subject)}</strong> ${badge(m.status)}<br>
+        <small>${esc(m.name)} · ${date(m.created_at)} ${m.user_id ? '· a un compte' : '· visiteur'}</small></div>
+        <div class="msg-contact">${link(m.contact)}</div></header>
+      <p class="msg-body">${esc(m.body)}</p>
+      ${m.reply ? `<div class="reply-box"><small>Votre réponse du ${date(m.replied_at)}${m.user_id ? '' : ' (non visible par l\'auteur sans compte)'}</small><p>${esc(m.reply)}</p></div>` : ''}
+      <div class="acts">
+        <textarea rows="2" maxlength="1500" placeholder="Votre réponse…" data-r="${esc(m.id)}"></textarea>
+        <button type="button" class="small" data-send="${esc(m.id)}">Enregistrer la réponse</button>
+        ${m.status === 'new' ? `<button type="button" class="small ghost dark" data-st="read" data-id="${esc(m.id)}">Marquer comme lu</button>` : ''}
+        ${m.status !== 'done' ? `<button type="button" class="small ghost dark" data-st="done" data-id="${esc(m.id)}">Marquer comme traité</button>` : ''}
+        <button type="button" class="small danger" data-del="${esc(m.id)}">Supprimer</button>
+      </div></article>`).join('') : '<p class="loc">Aucun message pour le moment.</p>'}`;
+  $$('[data-st]', el).forEach(b => b.addEventListener('click', async () => {
+    await api('/api/admin/messages/' + b.dataset.id, { json: { status: b.dataset.st } }); messages(el);
+  }));
+  $$('[data-send]', el).forEach(b => b.addEventListener('click', async () => {
+    const t = $(`[data-r="${b.dataset.send}"]`, el).value.trim();
+    if (!t) { alert('Écrivez une réponse.'); return; }
+    await api('/api/admin/messages/' + b.dataset.send, { json: { reply: t } }); messages(el);
+  }));
+  $$('[data-del]', el).forEach(b => b.addEventListener('click', async () => {
+    if (!confirm('Supprimer ce message ?')) return;
+    await api('/api/admin/messages/' + b.dataset.del, { method: 'DELETE' }); messages(el);
   }));
 }
 

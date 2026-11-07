@@ -67,9 +67,12 @@ async function initNav(active) {
   try { me = await api('/api/auth/me'); } catch { /* non connecté */ }
   const links = [['/', 'Hébergements'], ['/louer.html', 'Maisons à louer']];
   links.push(me ? ['/compte.html', 'Mon compte'] : ['/compte.html', 'Connexion']);
+  links.splice(2, 0, ['/contact.html', 'Contact']);
   if (me && me.role === 'admin') links.push(['/admin.html', 'Admin']);
   nav.innerHTML = links.map(([h, t]) =>
-    `<a href="${h}"${h === active ? ' aria-current="page"' : ''}>${esc(t)}</a>`).join('');
+    `<a href="${h}"${h === active ? ' aria-current="page"' : ''}>${esc(t)}</a>`).join('') +
+    '<button type="button" id="theme-toggle" class="theme-toggle"></button>';
+  initThemeToggle();
   return me;
 }
 
@@ -175,4 +178,26 @@ async function renderSocial(box, type, id) {
     try { await api('/api/comments/' + b.dataset.del, { method: 'DELETE' }); renderSocial(box, type, id); }
     catch (err) { flash(msg, err.message, 'err'); }
   }));
+}
+
+
+// ---------- Mode nuit / jour ----------
+function currentTheme() { return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'; }
+function setTheme(mode, save = true) {
+  document.documentElement.setAttribute('data-theme', mode);
+  if (save) { try { localStorage.setItem('theme', mode); } catch { /* ignoré */ } }
+  const mc = document.querySelector('meta[name=theme-color]');
+  if (mc) mc.content = mode === 'dark' ? '#120c08' : '#3a2a1f';
+  const b = document.getElementById('theme-toggle');
+  if (b) {
+    b.textContent = mode === 'dark' ? '☀️' : '🌙';
+    b.title = mode === 'dark' ? 'Passer en mode jour' : 'Passer en mode nuit';
+    b.setAttribute('aria-label', b.title);
+  }
+}
+function initThemeToggle() {
+  const b = document.getElementById('theme-toggle');
+  if (!b) return;
+  setTheme(currentTheme(), false);
+  b.addEventListener('click', () => setTheme(currentTheme() === 'dark' ? 'light' : 'dark'));
 }

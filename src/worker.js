@@ -132,6 +132,9 @@ function parseListing(b) {
   return { v };
 }
 
+const CONTACT_SUBJECTS = ['Question sur une annonce', 'Paiement ou abonnement', 'Signaler une annonce ou un commentaire',
+  'Problème de compte', 'Problème technique', 'Autre demande'];
+
 async function socialTargetExists(env, type, id) {
   if (type === 'stay') return loadStays().some(s => s.id === id);
   if (!/^[a-f0-9]{16}$/.test(id)) return false;
@@ -414,6 +417,29 @@ export default {
         return json({ ok: true });
       }
 
+      // ----- Public : contacter l'administrateur -----
+      if (method === 'POST' && p === '/api/contact') {
+        const b = await request.json().catch(() => ({}));
+        if (b.website) return json({ ok: true }); // champ piège : on ignore les robots
+        const name = String(b.name || '').trim().slice(0, 80);
+        const contact = String(b.contact || '').trim().slice(0, 120);
+        const subject = CONTACT_SUBJECTS.includes(b.subject) ? b.subject : '';
+        const body = String(b.body || '').trim();
+        if (name.length < 2) return bad('Indiquez votre nom');
+        if (contact.length < 5) return bad('Indiquez un téléphone ou une adresse e-mail pour que nous puissions vous répondre');
+        if (!subject) return bad('Choisissez un sujet');
+        if (body.length < 10) return bad('Votre message est trop court (10 caractères minimum)');
+        if (body.length > 1500) return bad('Votre message est trop long (1500 caractères maximum)');
+        const ip = await sha256(request.headers.get('cf-connecting-ip') || 'local');
+        const since = new Date(Date.now() - 3600e3).toISOString();
+        const recent = (await env.DB.prepare('SELECT COUNT(*) AS n FROM messages WHERE ip_hash=?1 AND created_at>?2').bind(ip, since).first()).n;
+        if (recent >= 5) return bad('Trop de messages envoyés. Réessayez dans une heure.', 429);
+        const me = await currentUser(request, env);
+        await env.DB.prepare(`INSERT INTO messages (id,user_id,name,contact,subject,body,status,ip_hash,created_at) VALUES (?1,?2,?3,?4,?5,?6,'new',?7,?8)`)
+          .bind(uid(), me ? me.id : null, name, contact, subject, body, ip, new Date().toISOString()).run();
+        return json({ ok: true }, 201);
+      }
+
       // ----- Public : likes et commentaires (lecture) -----
       if (method === 'GET' && (m = p.match(/^\/api\/social\/(listing|stay)\/([\w-]{1,60})$/))) {
         if (!(await socialTargetExists(env, m[1], m[2]))) return bad('Publication introuvable', 404);
@@ -438,6 +464,13 @@ export default {
       // ===== À partir d'ici : connexion obligatoire =====
       const user = await requireAuth(request, env);
       if (!user) return bad('Connexion requise', 401);
+
+      // ----- Mes messages à l'administrateur -----
+      if (method === 'GET' && p === '/api/my/messages') {
+        const { results } = await env.DB.prepare(
+          'SELECT id,subject,body,status,reply,replied_at,created_at FROM messages WHERE user_id=?1 ORDER BY created_at DESC LIMIT 30').bind(user.id).all();
+        return json(results);
+      }
 
       // ----- Likes et commentaires (écriture) -----
       if (method === 'POST' && (m = p.match(/^\/api\/social\/(listing|stay)\/([\w-]{1,60})\/like$/))) {
@@ -594,7 +627,8 @@ export default {
             hidden: await c(`SELECT COUNT(*) AS n FROM listings WHERE status='hidden'`),
             pendingPayments: await c(`SELECT COUNT(*) AS n FROM payments WHERE status IN ('pending','submitted')`),
             activeSubs: await c(`SELECT COUNT(*) AS n FROM subscriptions WHERE status='active' AND expires_at>${Date.now()}`),
-            bookingRequests: await c(`SELECT COUNT(*) AS n FROM requests`)
+            bookingRequests: await c(`SELECT COUNT(*) AS n FROM requests`),
+            newMessages: await c(`SELECT COUNT(*) AS n FROM messages WHERE status='new'`)
           });
         }
         if (method === 'GET' && p === '/api/admin/listings') {
@@ -624,6 +658,28 @@ export default {
           if (m[1] === user.id) return bad('Vous ne pouvez pas suspendre votre propre compte');
           await env.DB.prepare('UPDATE users SET status=?2 WHERE id=?1').bind(m[1], b.status).run();
           if (b.status === 'suspended') await env.DB.prepare('DELETE FROM sessions WHERE user_id=?1').bind(m[1]).run();
+          return json({ ok: true });
+        }
+        if (method === 'GET' && p === '/api/admin/messages') {
+          const { results } = await env.DB.prepare(
+            `SELECT id,user_id,name,contact,subject,body,status,reply,replied_at,created_at FROM messages
+             ORDER BY CASE status WHEN 'new' THEN 0 WHEN 'read' THEN 1 ELSE 2 END, created_at DESC LIMIT 300`).all();
+          return json(results);
+        }
+        if (method === 'POST' && (m = p.match(/^\/api\/admin\/messages\/([a-f0-9]{16})$/))) {
+          const b = await request.json().catch(() => ({}));
+          const row = await env.DB.prepare('SELECT * FROM messages WHERE id=?1').bind(m[1]).first();
+          if (!row) return bad('Message introuvable', 404);
+          if (typeof b.reply === 'string' && b.reply.trim()) {
+            const reply = b.reply.trim().slice(0, 1500);
+            await env.DB.prepare(`UPDATE messages SET reply=?2, replied_at=?3, status='done' WHERE id=?1`).bind(row.id, reply, new Date().toISOString()).run();
+          } else if (['new', 'read', 'done'].includes(b.status)) {
+            await env.DB.prepare('UPDATE messages SET status=?2 WHERE id=?1').bind(row.id, b.status).run();
+          } else return bad('Requête invalide');
+          return json({ ok: true });
+        }
+        if (method === 'DELETE' && (m = p.match(/^\/api\/admin\/messages\/([a-f0-9]{16})$/))) {
+          await env.DB.prepare('DELETE FROM messages WHERE id=?1').bind(m[1]).run();
           return json({ ok: true });
         }
         if (method === 'GET' && p === '/api/admin/comments') {

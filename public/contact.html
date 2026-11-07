@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>try{var t=localStorage.getItem('theme');if(!t&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)t='dark';if(t==='dark')document.documentElement.setAttribute('data-theme','dark')}catch(e){}</script>
+  <meta name="theme-color" content="#3a2a1f">
+  <title>Contacter l'administrateur – Gabon Séjours</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Nunito:wght@400;600;700;800&display=swap">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="skin.css">
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="/">Gabon<span>Séjours</span></a>
+    <nav id="nav"></nav>
+  </header>
+  <main class="narrow" id="app">
+    <div class="card-box">
+      <h1>Contacter l'administrateur</h1>
+      <p class="loc">Une question sur une annonce, un paiement ou un abonnement ? Un contenu à signaler ? Écrivez-nous, nous répondons dès que possible.</p>
+      <form id="contact" class="stack" novalidate>
+        <label>Votre nom<input name="name" autocomplete="name" required minlength="2" maxlength="80"></label>
+        <label>Téléphone ou e-mail <small>(pour vous répondre)</small><input name="contact" autocomplete="tel" required maxlength="120" placeholder="+241 … ou nom@exemple.com"></label>
+        <label>Sujet<select name="subject" required>
+          <option value="">Choisir un sujet</option>
+          <option>Question sur une annonce</option>
+          <option>Paiement ou abonnement</option>
+          <option>Signaler une annonce ou un commentaire</option>
+          <option>Problème de compte</option>
+          <option>Problème technique</option>
+          <option>Autre demande</option>
+        </select></label>
+        <label>Votre message<textarea name="body" rows="6" required minlength="10" maxlength="1500" placeholder="Décrivez votre demande (si c'est à propos d'une annonce, collez son lien)."></textarea></label>
+        <label class="hp-field" aria-hidden="true">Site web<input name="website" tabindex="-1" autocomplete="off"></label>
+        <button type="submit">Envoyer le message</button>
+        <div id="cfb"></div>
+      </form>
+    </div>
+    <section class="card-box" id="mine-msgs" hidden>
+      <h2>Mes messages et réponses</h2>
+      <div id="mine-list"></div>
+    </section>
+  </main>
+  <footer><p data-text="footer_text">Gabon Séjours</p></footer>
+  <script src="common.js"></script>
+  <script src="fx.js"></script>
+  <script>
+    initNav('/contact.html').then(async me => {
+      const f = document.getElementById('contact');
+      if (!me) return;
+      f.name.value = me.name || ''; f.contact.value = me.phone || me.email || '';
+      try {
+        const list = await api('/api/my/messages');
+        if (!list.length) return;
+        document.getElementById('mine-msgs').hidden = false;
+        document.getElementById('mine-list').innerHTML = list.map(m => `<article class="msg-card ${esc(m.status)}">
+          <header><strong>${esc(m.subject)}</strong><small>${new Date(m.created_at).toLocaleDateString('fr-FR')}</small></header>
+          <p class="msg-body">${esc(m.body)}</p>
+          ${m.reply ? `<div class="reply-box"><small>Réponse de l'administrateur</small><p>${esc(m.reply)}</p></div>` : '<p class="loc">En attente de réponse.</p>'}</article>`).join('');
+      } catch { /* ignoré */ }
+    });
+    document.getElementById('contact').addEventListener('submit', async e => {
+      e.preventDefault();
+      const f = e.target, fb = document.getElementById('cfb');
+      const missing = ['name', 'contact', 'subject', 'body'].filter(k => !f[k].value.trim());
+      if (missing.length) { flash(fb, 'Complétez tous les champs avant d\'envoyer.', 'err'); return; }
+      const btn = f.querySelector('button[type=submit]'); btn.disabled = true; btn.textContent = 'Envoi…';
+      try {
+        await api('/api/contact', { json: Object.fromEntries(new FormData(f)) });
+        f.body.value = ''; f.subject.value = '';
+        flash(fb, '✅ Message envoyé. Nous vous répondrons dès que possible.');
+        location.hash = '';
+      } catch (err) { flash(fb, err.message, 'err'); }
+      btn.disabled = false; btn.textContent = 'Envoyer le message';
+    });
+  </script>
+</body>
+</html>
