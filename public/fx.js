@@ -77,3 +77,11 @@
     });
   }
 })();
+
+
+// Barre de progression de lecture (jaune)
+(function () {
+  const bar = document.createElement('div'); bar.id = 'progress'; document.body.appendChild(bar);
+  const upd = () => { const h = document.documentElement; const max = h.scrollHeight - h.clientHeight; bar.style.width = (max > 0 ? Math.min(100, h.scrollTop / max * 100) : 0) + '%'; };
+  addEventListener('scroll', upd, { passive: true }); addEventListener('resize', upd); upd();
+})();

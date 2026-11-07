@@ -187,7 +187,7 @@ function setTheme(mode, save = true) {
   document.documentElement.setAttribute('data-theme', mode);
   if (save) { try { localStorage.setItem('theme', mode); } catch { /* ignoré */ } }
   const mc = document.querySelector('meta[name=theme-color]');
-  if (mc) mc.content = mode === 'dark' ? '#120c08' : '#3a2a1f';
+  if (mc) mc.content = mode === 'dark' ? '#0B0E11' : '#181A20';
   const b = document.getElementById('theme-toggle');
   if (b) {
     b.textContent = mode === 'dark' ? '☀️' : '🌙';
