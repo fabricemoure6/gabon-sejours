@@ -1,139 +1,183 @@
-/* Thème « Média » inspiré de GCU : bleu profond #003779, jaune #ffde59, titres League Spartan.
+/* Thème « Maison » : murs crème, toit en terre cuite, bois sombre.
+   Chaque rubrique a sa couleur : hôtel, appartement, lodge, maison, villa, studio, chambre.
    Chargé en dernier : surcharge theme.css et styles.css. */
 :root{
-  --navy:#003779;--navy-d:#002a5c;--navy-l:#0a4a9a;--gold:#ffde59;--red:#d81f26;
-  --green:#003779;--forest:#002a5c;--yellow:#ffde59;--blue:#0a4a9a;
-  --ink:#10213d;--muted:#52627d;--bg:#003779;--card:#fff;--line:#d8e1ef;--sand:#eef3fa;
-  --serif:"League Spartan","Inter",system-ui,sans-serif;
-  --shadow:0 12px 30px -14px rgba(0,20,60,.55);
+  --wood:#3a2a1f;--wood-2:#54392a;--roof:#bf5a20;--roof-l:#e08a4c;--cream:#fbf4e9;--paper:#fffaf2;
+  --ink:#2b2018;--muted:#7a6a5c;--line:#eadccb;--sand:#f4e9d8;
+  /* couleurs des rubriques */
+  --c-hotel:#b8433a;--c-apartment:#1f7d8c;--c-lodge:#3f7d4e;
+  --c-maison:#d9733a;--c-villa:#c8931f;--c-studio:#7b4fa0;--c-chambre:#d4577f;
+  /* compat. avec les anciennes feuilles */
+  --green:var(--roof);--forest:var(--wood);--yellow:#f2b84b;--blue:var(--c-apartment);
+  --bg:var(--cream);--card:#fff;--navy:var(--wood);--navy-d:#2a1d14;--navy-l:var(--wood-2);--gold:#f2b84b;--red:#b8433a;
+  --serif:"DM Serif Display",Georgia,serif;
+  --sans:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --shadow:0 14px 30px -18px rgba(58,42,31,.55);
 }
-body{background:var(--navy);color:#fff}
-h1,h2,h3,.brand{font-family:var(--serif);font-weight:800;letter-spacing:0}
-h2{text-transform:uppercase;letter-spacing:.01em}
+body{background:var(--cream);color:var(--ink);font-family:var(--sans)}
+h1,h2,h3,.brand{font-family:var(--serif);font-weight:400;letter-spacing:.005em}
+h2{text-transform:none}
+input,select,textarea,button{font-family:var(--sans)}
 
-/* Bandeau supérieur */
-.top{background:var(--navy);border-bottom:0;box-shadow:0 1px 0 rgba(255,255,255,.08)}
-.top.scrolled{border-bottom-color:transparent;box-shadow:0 8px 24px -12px rgba(0,0,0,.6)}
-.brand,.brand span{color:#fff;font-weight:800;text-transform:uppercase}
-.brand span{color:var(--gold)}
-.top nav a{color:#fff;font-family:var(--serif);font-weight:700}
-.top nav a::after{background:var(--gold)}
-.top nav a[aria-current=page]{color:var(--gold)}
+/* En-tête : bois sombre + frise de toit */
+.top{background:var(--wood);border-bottom:0;box-shadow:none;position:sticky}
+.top::after{content:"";position:absolute;left:0;right:0;bottom:-11px;height:12px;pointer-events:none;
+  background:conic-gradient(from -45deg at 50% 100%,var(--roof) 90deg,transparent 0) 0 0/24px 12px}
+.top.scrolled{box-shadow:0 10px 24px -14px rgba(0,0,0,.6)}
+.brand,.brand span{color:#fff;font-weight:400;text-transform:none;font-size:1.45rem}
+.brand span{color:var(--roof-l)}
+.top nav a{color:#f6e9d6;font-family:var(--sans);font-weight:700}
+.top nav a::after{background:var(--roof-l)}
+.top nav a[aria-current=page]{color:#fff}
+.top nav a[href="/"]{--rub:var(--c-hotel)}
+.top nav a[href="/louer.html"]{--rub:var(--c-maison)}
+.top nav a[href="/compte.html"]{--rub:var(--c-apartment)}
+.top nav a[href="/admin.html"]{--rub:var(--c-villa)}
+.top nav a::before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--rub,var(--roof-l));margin-right:7px}
 
-/* Boutons : jaune (action) / contour */
-button,.btn{background:var(--gold);color:#10213d;font-family:var(--serif);font-weight:800;box-shadow:0 6px 16px -8px rgba(255,222,89,.55)}
-button:disabled{opacity:.5}
-.btn.alt,button.alt{border-color:var(--gold);color:var(--gold);background:transparent}
-.box .btn.alt,.card-box .btn.alt,.card-box button.alt{color:var(--navy);border-color:var(--navy)}
+/* Boutons */
+button,.btn{background:var(--roof);color:#fff;font-family:var(--sans);font-weight:800;box-shadow:0 8px 18px -10px rgba(191,90,32,.9)}
+button:hover,.btn:hover{background:#a84e1a}
+.btn.alt,button.alt{background:transparent;border:2px solid var(--roof);color:var(--roof);box-shadow:none}
 .btn.wa{background:#1fa855;color:#fff}
-.danger{background:var(--red)!important;color:#fff!important}
-.chip{background:var(--navy-l);color:#fff;border-color:rgba(255,255,255,.18)}
-.chip:hover,.chip.on{background:var(--gold);color:#10213d}
-.ghost{color:#fff;border-color:rgba(255,255,255,.7)}
-.ghost.dark{color:var(--navy);border-color:var(--navy);background:transparent}
+.danger{background:var(--c-hotel)!important;color:#fff!important}
+.ghost{color:#fff;border-color:rgba(255,255,255,.75);background:transparent}
+.ghost.dark{color:var(--wood);border-color:var(--wood);background:transparent}
+.chip{background:#fff;color:var(--wood);border:1px solid var(--line)}
+.chip:hover,.chip.on{background:var(--wood);color:#fff}
+.small{font-size:.85rem}
 
 /* Bandeau d'accueil */
-.hero-media{background:linear-gradient(160deg,#002a5c 0%,#003779 55%,#0a4a9a 100%)}
-.hero-media::before{background:var(--gold);opacity:.22}
-.hero-media::after{background:#2d8cff;opacity:.28}
-.hero h1{text-transform:uppercase}
-.hero .search{background:rgba(255,255,255,.97);color:var(--ink)}
+.hero-media{background:linear-gradient(160deg,#2a1d14 0%,#5a3523 55%,#a8572b 100%)}
+.hero-media::before{background:#f2b84b;opacity:.28}
+.hero-media::after{background:#e07a3f;opacity:.3}
+.hero h1{text-transform:none;font-weight:400;font-size:clamp(2.3rem,6vw,4rem)}
+.hero .search{background:var(--paper);color:var(--ink)}
 .hero .search label,.hero .search .f{color:var(--muted)}
+.hero .search input,.hero .search select{background:#fff;color:var(--ink)}
+.hero .btn.alt,.hero .ghost{color:#fff;border-color:#fff;background:rgba(255,255,255,.08)}
 
-/* Sections sur fond bleu */
-.stats .stat,.stat{background:#fff;color:var(--ink)}
-.stat strong,.stats strong{color:var(--navy);font-family:var(--serif)}
-.discover h2,.zones h2,.results h2,.section-title,main>h2,main>h1,.page-title{color:#fff}
-.discover h2::before,.zones h2::before{content:"";display:inline-block;width:6px;height:1.1em;background:var(--gold);border-radius:3px;margin-right:12px;vertical-align:-.15em}
-.discover p,.zones p,.results .loc,.loc{color:#c9d8ef}
-.tile{background:var(--navy-l);border-color:rgba(255,255,255,.12);color:#fff}
-.tile-art{background:linear-gradient(140deg,#0a4a9a,#002a5c)}
-.tile-body strong{color:#fff;font-weight:800}
-.tile-body span{color:#c9d8ef}
-.tile-body em{color:var(--gold)}
-.promo{background:linear-gradient(120deg,var(--navy-l),var(--navy-d));border:1px solid rgba(255,255,255,.12)}
-.promo::after{background:radial-gradient(circle,rgba(255,222,89,.5),transparent 70%)}
-.promo .btn.alt{color:var(--gold);border-color:var(--gold)}
+/* Chiffres clés : une couleur par rubrique */
+.stat{background:#fff;color:var(--muted);border-top:6px solid var(--c-hotel);box-shadow:var(--shadow)}
+.stats .stat:nth-child(1){border-top-color:var(--c-hotel)}.stats .stat:nth-child(1) strong{color:var(--c-hotel)}
+.stats .stat:nth-child(2){border-top-color:var(--c-maison)}.stats .stat:nth-child(2) strong{color:var(--c-maison)}
+.stats .stat:nth-child(3){border-top-color:var(--c-apartment)}.stats .stat:nth-child(3) strong{color:var(--c-apartment)}
+.stats .stat:nth-child(4){border-top-color:var(--c-lodge)}.stats .stat:nth-child(4) strong{color:var(--c-lodge)}
+.stat strong{font-family:var(--serif);font-weight:400}
 
-/* Cartes d'hébergements et panneaux : fond clair, texte sombre (lisible) */
-.card,.zone,.plan,.my-item,.box,.card-box,.panel{background:#fff;color:var(--ink);border-color:transparent}
-.card h3,.zone h3,.card-box h1,.card-box h2,.card-box h3,.box h3,.plan h3{color:var(--navy);text-transform:none}
-.card-box .loc,.box .loc,.card .loc{color:var(--muted)}
-.zone-tag,.card .more{color:var(--navy)}
-.score{background:var(--navy)}
-.price{color:var(--navy)}
-.pic.hotel{background:linear-gradient(135deg,#002a5c,#0a4a9a)}
-.pic.apartment{background:linear-gradient(135deg,#0a4a9a,#2d8cff)}
-.pic.lodge{background:linear-gradient(135deg,#7a5a00,#ffde59)}
-.tag{background:rgba(255,222,89,.95);color:#10213d}
-.switch button{background:var(--navy-l);color:#fff}
-.switch button.on,.tabs button.on{background:var(--gold);color:#10213d;border-color:var(--gold)}
-.tabs button{background:var(--navy-l);color:#fff;border-color:rgba(255,255,255,.15)}
+/* Titres de sections */
+.discover h2,.zones h2,.results h2,main>h2,main>h1{color:var(--wood)}
+.discover h2::before,.zones h2::before{content:"";display:inline-block;width:8px;height:1.05em;border-radius:4px;margin-right:12px;vertical-align:-.12em}
+.discover h2::before{background:var(--c-lodge)}
+.zones h2::before{background:var(--c-apartment)}
+.discover p,.zones>p,.results .loc,.loc{color:var(--muted)}
+#count,.empty,.results label{color:var(--muted)}
 
-footer{background:var(--navy-d);color:#c9d8ef;border-top:4px solid var(--gold)}
-.msg.err{background:#fde8e8;color:#8a1f1f}
+/* Destinations : une couleur chacune */
+.tile{background:#fff;color:var(--ink);border:0;border-bottom:6px solid var(--tc,var(--roof));box-shadow:var(--shadow)}
+.tile:nth-child(1){--tc:var(--c-apartment)}.tile:nth-child(2){--tc:var(--c-lodge)}.tile:nth-child(3){--tc:#8a9a2a}
+.tile:nth-child(4){--tc:var(--c-maison)}.tile:nth-child(5){--tc:#2b6fb0}.tile:nth-child(6){--tc:#8a5a3c}
+.tile-art{background:linear-gradient(140deg,var(--tc,var(--roof)),var(--wood))}
+.tile-body strong{color:var(--wood);font-family:var(--serif);font-weight:400;font-size:1.3rem}
+.tile-body span{color:var(--muted)}
+.tile-body em{color:var(--tc,var(--roof));font-style:normal;font-weight:800}
 
-/* ---------- Administration : lecture claire ---------- */
+/* Bandeau « Maisons à louer » */
+.promo{background:linear-gradient(120deg,var(--roof),#8a3f14);border:0;color:#fff}
+.promo h2{color:#fff}
+.promo::after{background:radial-gradient(circle,rgba(242,184,75,.6),transparent 70%)}
+.promo .btn{background:#fff;color:var(--roof)}
+.promo .btn.alt{background:transparent;color:#fff;border-color:#fff}
+
+/* Cartes et panneaux */
+.card,.zone,.plan,.my-item,.box,.card-box,.panel{background:#fff;color:var(--ink);border:0;box-shadow:var(--shadow)}
+.card{border-top:5px solid var(--rc,var(--roof))}
+.card h3,.zone h3,.card-box h1,.card-box h2,.card-box h3,.box h3,.plan h3{color:var(--wood);font-family:var(--serif);font-weight:400}
+.zone-tag{color:var(--rc,var(--roof))}
+.price,.price.big{color:var(--wood)}
+.score{background:var(--wood)}
+.card[data-type=hotel]{--rc:var(--c-hotel)}.card[data-type=apartment]{--rc:var(--c-apartment)}.card[data-type=lodge]{--rc:var(--c-lodge)}
+.card[data-cat=maison]{--rc:var(--c-maison)}.card[data-cat=villa]{--rc:var(--c-villa)}.card[data-cat=appartement]{--rc:var(--c-apartment)}
+.card[data-cat=studio]{--rc:var(--c-studio)}.card[data-cat=chambre]{--rc:var(--c-chambre)}
+.card .tag{background:var(--rc,var(--roof));color:#fff}
+.pic.hotel{background:linear-gradient(135deg,var(--c-hotel),#6e2620)}
+.pic.apartment{background:linear-gradient(135deg,var(--c-apartment),#0f4a55)}
+.pic.lodge{background:linear-gradient(135deg,var(--c-lodge),#244a2d)}
+.thumb .noimg{background:linear-gradient(135deg,var(--rc,var(--roof)),var(--wood));color:#fff}
+.switch button{background:#fff;color:var(--wood);box-shadow:none;border:1px solid var(--line)}
+.switch button.on{background:var(--wood);color:#fff}
+.msg.err{background:#fde8e4;color:#8a2a1c}
+.zone .chip{background:var(--sand);border-color:transparent}
+.zone:nth-of-type(1) .chip:hover{background:var(--c-hotel);color:#fff}
+.zone:nth-of-type(2) .chip:hover{background:var(--c-apartment);color:#fff}
+.zone:nth-of-type(3) .chip:hover{background:var(--c-lodge);color:#fff}
+.zone:nth-of-type(4) .chip:hover{background:var(--c-maison);color:#fff}
+
+footer{background:var(--wood);color:#e9d8c2;border-top:0}
+
+/* ---------- Administration : une couleur par onglet ---------- */
 .page-wide{max-width:1400px}
 .head-row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
-.head-row h1{color:#fff;margin:0;text-transform:uppercase}
-.tabs{border-bottom:2px solid rgba(255,255,255,.15);padding-bottom:10px}
-.tabs button{border-radius:10px;font-size:.95rem}
-#panel.card-box{padding:22px;border-radius:18px}
-#panel h2{color:var(--navy);text-transform:none;font-size:1.5rem;margin:0 0 6px}
+.head-row h1{margin:0;color:var(--wood)}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;border-bottom:2px solid var(--line);padding-bottom:12px}
+.tabs button{--t:var(--roof);background:#fff;color:var(--ink);border:2px solid var(--t);box-shadow:none;border-radius:12px;font-size:.92rem}
+.tabs button:nth-child(1){--t:var(--c-apartment)}.tabs button:nth-child(2){--t:var(--c-maison)}
+.tabs button:nth-child(3){--t:var(--c-studio)}.tabs button:nth-child(4){--t:var(--c-lodge)}
+.tabs button:nth-child(5){--t:var(--c-villa)}.tabs button:nth-child(6){--t:var(--c-chambre)}
+.tabs button:nth-child(7){--t:var(--c-hotel)}.tabs button:nth-child(8){--t:#2b6fb0}.tabs button:nth-child(9){--t:#8a5a3c}
+.tabs button.on{background:var(--t);color:#fff}
+#panel.card-box{padding:22px;border-radius:18px;border-top:6px solid var(--wood)}
+#panel h2{color:var(--wood);font-size:1.7rem;margin:0 0 6px}
 #panel h2::before{display:none}
-#panel h3{margin:22px 0 8px;padding-bottom:6px;border-bottom:2px solid var(--gold);color:var(--navy)}
-#panel label{color:var(--ink);font-weight:600;font-size:.92rem}
-#panel input,#panel textarea,#panel select{color:var(--ink);background:#fff;border:1px solid #b9c7de;border-radius:10px;font-size:1rem}
+#panel h3{margin:22px 0 8px;padding-bottom:6px;border-bottom:3px solid var(--roof-l);color:var(--wood)}
+#panel label{color:var(--ink);font-weight:700;font-size:.92rem}
+#panel input,#panel textarea,#panel select{color:var(--ink);background:#fff;border:1px solid #d9c6ae;border-radius:10px;font-size:1rem}
 #panel textarea{width:100%;font-family:inherit;line-height:1.45}
-#panel input:focus,#panel textarea:focus,#panel select:focus{outline:3px solid rgba(0,55,121,.25);border-color:var(--navy)}
+#panel input:focus,#panel textarea:focus,#panel select:focus{outline:3px solid rgba(191,90,32,.25);border-color:var(--roof)}
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px}
-#panel .tile{background:linear-gradient(160deg,#fff,var(--sand));border:1px solid var(--line);border-top:4px solid var(--gold);color:var(--ink);padding:18px;border-radius:14px;box-shadow:none}
+#panel .tile{background:#fff;border:1px solid var(--line);border-top:6px solid var(--tc,var(--roof));border-bottom:1px solid var(--line);color:var(--ink);padding:18px;border-radius:14px;box-shadow:none}
+#panel .tile:nth-child(1){--tc:var(--c-maison)}#panel .tile:nth-child(2){--tc:var(--c-villa)}#panel .tile:nth-child(3){--tc:var(--c-hotel)}
+#panel .tile:nth-child(4){--tc:var(--c-lodge)}#panel .tile:nth-child(5){--tc:var(--c-apartment)}#panel .tile:nth-child(6){--tc:var(--c-studio)}
 #panel .tile:hover{transform:none}
-#panel .tile strong{display:block;font-family:var(--serif);font-size:2.4rem;line-height:1;color:var(--navy)}
-#panel .tile span{color:var(--muted);font-weight:600}
-.table-wrap{border:1px solid var(--line);border-radius:12px}
+#panel .tile strong{display:block;font-family:var(--serif);font-weight:400;font-size:2.5rem;line-height:1;color:var(--tc)}
+#panel .tile span{color:var(--muted);font-weight:700}
+.table-wrap{border:1px solid var(--line);border-radius:12px;overflow:auto}
 table{font-size:.95rem;color:var(--ink)}
-thead th{background:var(--navy);color:#fff;font-family:var(--serif);font-weight:700;text-align:left;padding:12px 14px;white-space:nowrap;position:sticky;top:0}
+thead th{background:var(--wood);color:#fff;font-family:var(--sans);font-weight:800;text-align:left;padding:12px 14px;white-space:nowrap}
 tbody td{padding:12px 14px;border-top:1px solid var(--line);vertical-align:top}
-tbody tr:nth-child(even){background:#f5f8fd}
-tbody tr:hover{background:#fff8d6}
-table a{color:var(--navy);font-weight:700;text-decoration:underline}
+tbody tr:nth-child(even){background:#fcf6ec}
+tbody tr:hover{background:#fdeccc}
+table a{color:var(--roof);font-weight:800;text-decoration:underline}
 table small{color:var(--muted)}
 .acts{display:flex;gap:6px;flex-wrap:wrap}
-.badge{background:#dff3e6;color:#0b5a2b;font-size:.8rem}
-.badge.active,.badge.published,.badge.confirmed{background:#dff3e6;color:#0b5a2b}
-.badge.expired,.badge.rejected,.badge.removed{background:#fde8e8;color:#8a1f1f}
-.badge.hidden,.badge.pending,.badge.suspended{background:#fff1c2;color:#6b4a00}
-.badge.submitted{background:#dce9fb;color:#003779}
+.badge{background:#e1f1e4;color:#1c5a2c}
+.badge.active,.badge.published,.badge.confirmed{background:#e1f1e4;color:#1c5a2c}
+.badge.expired,.badge.rejected,.badge.removed{background:#fbe0db;color:#8a2a1c}
+.badge.hidden,.badge.pending,.badge.suspended{background:#fff0c9;color:#6b4a00}
+.badge.submitted{background:#dcecf1;color:#0f4a55}
 .sections li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;margin-bottom:6px;background:var(--sand);border:1px solid var(--line);border-radius:10px;color:var(--ink)}
+.hp,.dp{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.mini{width:56px;height:42px;object-fit:cover;border-radius:6px}
 @media(max-width:700px){.two-col{grid-template-columns:1fr}}
 
-/* Corrections de contraste */
-#count,.empty,.results label,.toolbar,.bar{color:#dbe6f7}
-.zone .loc,.zone p,.zone small{color:var(--muted)}
-.zone h3{color:var(--navy)}
-.hero-media::before{background:#ffc83d;opacity:.16}
-
 /* ---------- J'aime et commentaires ---------- */
-.social{max-width:1100px;margin:0 auto 40px;padding:22px;background:#fff;color:var(--ink);border-radius:18px}
+.social{max-width:1100px;margin:0 auto 40px;padding:22px;background:#fff;color:var(--ink);border-radius:18px;box-shadow:var(--shadow);border-top:6px solid var(--c-chambre)}
 .social-head{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:12px}
-.social-head h3{margin:0;color:var(--navy)}
-.like-btn{background:#fff;color:var(--navy);border:2px solid var(--navy);box-shadow:none;display:inline-flex;gap:8px;align-items:center}
+.social-head h3{margin:0;color:var(--wood)}
+.like-btn{background:#fff;color:var(--c-chambre);border:2px solid var(--c-chambre);box-shadow:none;display:inline-flex;gap:8px;align-items:center}
+.like-btn:hover{background:#fdeaf1}
 .like-btn .heart{font-size:1.25rem;line-height:1}
-.like-btn.on{background:var(--red);border-color:var(--red);color:#fff}
+.like-btn.on{background:var(--c-chambre);border-color:var(--c-chambre);color:#fff}
 .cform{display:grid;gap:10px;margin:10px 0 16px}
-.cform textarea{width:100%;border:1px solid #b9c7de;border-radius:12px;padding:12px;font:inherit;color:var(--ink)}
+.cform textarea{width:100%;border:1px solid #d9c6ae;border-radius:12px;padding:12px;font:inherit;color:var(--ink)}
 .cform button{justify-self:end}
-.login-note{margin:6px 0 14px;color:var(--muted)}
-.login-note a{color:var(--navy);font-weight:700}
+.login-note{margin:6px 0 14px}
+.login-note a{color:var(--roof);font-weight:800}
 .comments{list-style:none;margin:0;padding:0;display:grid;gap:12px}
 .comments li{display:flex;gap:12px;padding:12px;background:var(--sand);border-radius:12px}
 .comments li.none{display:block;color:var(--muted);text-align:center}
-.avatar{flex:none;width:40px;height:40px;border-radius:50%;background:var(--navy);color:var(--gold);display:grid;place-items:center;font-family:var(--serif);font-weight:800}
+.avatar{flex:none;width:40px;height:40px;border-radius:50%;background:var(--roof);color:#fff;display:grid;place-items:center;font-family:var(--serif)}
 .cbody p{margin:4px 0;white-space:pre-wrap;overflow-wrap:anywhere}
 .cbody small{color:var(--muted)}
-.linklike{background:none;box-shadow:none;color:var(--red);padding:0;font-size:.85rem;font-family:inherit;font-weight:600}
+.linklike{background:none;box-shadow:none;color:var(--c-hotel);padding:0;font-size:.85rem;font-weight:700}
 @media(max-width:600px){.social{margin:0 12px 30px;padding:16px}}

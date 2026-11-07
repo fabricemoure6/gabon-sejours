@@ -70,7 +70,7 @@ async function search() {
       const dist = s.kmFromYou != null ? `${km1(s.kmFromYou)} km de vous`
         : s.kmFromCenter != null && s.zone ? `${km1(s.kmFromCenter)} km du centre-ville` : '';
       return `
-      <a class="card" href="/stay.html?id=${encodeURIComponent(s.id)}">
+      <a class="card" data-type="${esc(s.type)}" href="/stay.html?id=${encodeURIComponent(s.id)}">
         <div class="pic ${esc(s.type)}"><span class="tag">${TYPES[s.type] || ''} · ${'★'.repeat(s.stars)}</span></div>
         <div class="body">
           <h3>${esc(s.name)}</h3>

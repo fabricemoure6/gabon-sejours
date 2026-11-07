@@ -13,7 +13,7 @@ function card(l) {
   const dist = l.kmFromYou != null ? `${l.kmFromYou.toLocaleString('fr-FR')} km de vous`
     : l.kmFromCenter != null ? `${l.kmFromCenter.toLocaleString('fr-FR')} km du centre-ville` : '';
   const rooms = [l.bedrooms ? `${l.bedrooms} chambre${l.bedrooms > 1 ? 's' : ''}` : '', l.bathrooms ? `${l.bathrooms} sdb` : ''].filter(Boolean).join(' · ');
-  return `<a class="card" href="/annonce.html?id=${encodeURIComponent(l.id)}">
+  return `<a class="card" data-cat="${esc(l.category)}" href="/annonce.html?id=${encodeURIComponent(l.id)}">
     <div class="thumb">${photo}<span class="tag">${esc(CATEGORY_LABELS[l.category] || l.category)}</span></div>
     <div class="body">
       <h3>${esc(l.title)}</h3>
