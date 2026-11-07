@@ -137,7 +137,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .price.big{font-size:1.15rem}
 .price.big small{display:inline;font-size:.8rem}
 .narrow{max-width:860px;margin:0 auto;padding:24px 5vw}
-.wide{max-width:1300px;margin:0 auto;padding:24px 5vw}
+.page-wide{max-width:1300px;margin:0 auto;padding:24px 5vw}
 .narrow-box{max-width:520px;margin:0 auto}
 .card-box{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:20px}
 .card-box h1{margin:0 0 6px;font-size:1.5rem}
@@ -218,7 +218,7 @@ hr{border:0;border-top:1px solid var(--line);margin:20px 0}
   .two-col{grid-template-columns:1fr}
   .top nav{gap:10px;font-size:.9rem}
   .brand{font-size:1.1rem}
-  .narrow,.wide{padding:16px 4vw}
+  .narrow,.page-wide{padding:16px 4vw}
   .card-box{padding:14px}
   .my-item{grid-template-columns:72px 1fr}
   .my-thumb{width:72px;height:58px}

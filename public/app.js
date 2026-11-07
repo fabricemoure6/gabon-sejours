@@ -60,6 +60,7 @@ async function search() {
   new FormData(form).forEach((v, k) => v && p.set(k, v));
   if (sortEl.value) p.set('sort', sortEl.value);
   if (near) p.set('near', near.lat + ',' + near.lng);
+  if (!results.children.length) results.innerHTML = skeletons(6);
   const list = await api('/api/stays?' + p);
   count.textContent = list.length + ' hébergement(s)';
   if (!list.length) {
@@ -70,7 +71,7 @@ async function search() {
         : s.kmFromCenter != null && s.zone ? `${km1(s.kmFromCenter)} km du centre-ville` : '';
       return `
       <a class="card" href="/stay.html?id=${encodeURIComponent(s.id)}">
-        <div class="pic ${esc(s.type)}"><span class="tag">${TYPES[s.type] || ''} · ${'★'.repeat(s.stars)}</span></div>
+        <div class="pic ${esc(s.type)}">${window.GabonArt ? GabonArt.artFor(s.type) : ''}<span class="tag">${TYPES[s.type] || ''} · ${'★'.repeat(s.stars)}</span></div>
         <div class="body">
           <h3>${esc(s.name)}</h3>
           <p class="loc">${esc(s.area || '')}${s.area ? ', ' : ''}${esc(s.city)}</p>
@@ -128,3 +129,28 @@ form.elements.neighborhood.addEventListener('change', () => { if (map) map.inval
 
 setView('list');
 loadGeo().then(() => { initMap(); applySite(); return search(); });
+
+// Destinations : un clic lance la recherche
+document.getElementById('rail')?.addEventListener('click', e => {
+  const t = e.target.closest('[data-q]');
+  if (!t) return;
+  form.reset();
+  form.elements.q.value = t.dataset.q;
+  near = null; geoMsg.textContent = '';
+  search();
+  document.querySelector('.bar').scrollIntoView({ behavior: 'smooth' });
+});
+
+// Chiffres clés (calculés à partir des vraies données)
+(async () => {
+  try {
+    const [stays, rent, g] = await Promise.all([api('/api/stays'), api('/api/listings'), api('/api/neighborhoods')]);
+    const set = (id, n) => { const el = document.getElementById(id); if (el) el.dataset.target = n; };
+    set('st-stays', stays.length);
+    set('st-rent', rent.length);
+    if (!rent.length) { const el = document.getElementById('st-rent'); el.dataset.target = ''; el.dataset.counted = '1'; el.textContent = 'Nouveau'; el.nextElementSibling.textContent = 'Publiez la première annonce de location'; }
+    set('st-nb', g.zones.reduce((n, z) => n + z.neighborhoods.length, 0));
+    set('st-cities', new Set(stays.map(x => x.city)).size);
+    if (window.fxCount) fxCount();
+  } catch { /* chiffres facultatifs */ }
+})();

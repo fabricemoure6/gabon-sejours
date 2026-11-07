@@ -30,6 +30,7 @@ async function search() {
   new FormData(form).forEach((v, k) => v && p.set(k, v));
   if (sortEl.value) p.set('sort', sortEl.value);
   if (near) p.set('near', near.lat + ',' + near.lng);
+  if (!results.children.length) results.innerHTML = skeletons(6);
   const list = await api('/api/listings?' + p);
   $('#count').textContent = list.length + ' annonce(s)';
   results.innerHTML = list.length ? list.map(card).join('')

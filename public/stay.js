@@ -15,7 +15,7 @@ async function init() {
 
   root.innerHTML = `
     <section>
-      <div class="pic ${esc(s.type)}"><span class="tag">${TYPES[s.type] || ''} · ${'★'.repeat(s.stars)}</span></div>
+      <div class="pic ${esc(s.type)}">${window.GabonArt ? GabonArt.artFor(s.type) : ''}<span class="tag">${TYPES[s.type] || ''} · ${'★'.repeat(s.stars)}</span></div>
       <h1>${esc(s.name)}</h1>
       <p class="loc">${esc(where)}</p>
       ${s.zoneName ? `<p class="zone-tag">${esc(s.zoneName)}${s.arrondissement && /^\d/.test(s.arrondissement) ? ' · ' + esc(s.arrondissement) + ' arrondissement' : ''}</p>` : ''}

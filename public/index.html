@@ -6,7 +6,11 @@
   <meta name="theme-color" content="#0b6b3a">
   <title>Gabon Séjours – Hôtels, appartements, lodges et maisons à louer au Gabon</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="theme.css">
 </head>
 <body>
   <header class="top">
@@ -16,6 +20,7 @@
 
   <div id="page">
     <section class="hero" data-section="hero">
+      <div class="scene" aria-hidden="true" data-variant="hero"></div>
       <h1 data-text="hero_title">Trouvez votre hébergement au Gabon</h1>
       <p data-text="hero_subtitle">Hôtels, appartements meublés et lodges, de Libreville aux parcs nationaux.</p>
       <form id="search" class="search">
@@ -45,6 +50,21 @@
       </form>
       <button type="button" id="locate" class="ghost">Autour de moi</button>
       <p id="geo-msg" class="geo-msg" role="status"></p>
+    </section>
+
+    <section class="stats" data-section="stats" aria-label="Chiffres clés">
+      <div class="stat"><strong data-target="0" id="st-stays">0</strong><span>hôtels, lodges et résidences</span></div>
+      <div class="stat"><strong data-target="0" id="st-rent">0</strong><span>maisons et chambres à louer</span></div>
+      <div class="stat"><strong data-target="0" id="st-nb">0</strong><span>quartiers et zones cartographiés</span></div>
+      <div class="stat"><strong data-target="0" id="st-cities">0</strong><span>villes et parcs à découvrir</span></div>
+    </section>
+
+    <section class="discover" data-section="discover">
+      <div class="sec-head">
+        <h2 data-text="discover_title">Découvrez le Gabon</h2>
+        <p data-text="discover_subtitle">Plages, forêts, parcs nationaux et capitale : choisissez votre destination.</p>
+      </div>
+      <div class="rail" id="rail" aria-label="Destinations"></div>
     </section>
 
     <section class="promo" data-section="rentpromo">
@@ -92,6 +112,8 @@
   </footer>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="common.js"></script>
+  <script src="scene.js"></script>
+  <script src="fx.js"></script>
   <script src="app.js"></script>
   <script>initNav('/'); applySite();</script>
 </body>

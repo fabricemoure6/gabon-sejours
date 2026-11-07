@@ -37,6 +37,7 @@ async function applySite() {
   if (hero && site.settings.hero_photo_id) {
     hero.style.backgroundImage = `linear-gradient(rgba(5,50,28,.72),rgba(5,50,28,.72)), url(/api/photos/${encodeURIComponent(site.settings.hero_photo_id)})`;
     hero.style.backgroundSize = 'cover';
+    hero.classList.add('has-photo');
     hero.style.backgroundPosition = 'center';
   }
   return site;
@@ -79,6 +80,12 @@ async function uploadPhotoFile(file) {
   if (blob.size > 900 * 1024) blob = await compressImage(file, 1000, 0.7);
   const r = await api('/api/photos', { method: 'POST', body: blob, headers: { 'content-type': 'image/jpeg' } });
   return r.id;
+}
+
+// Cartes « squelette » pendant le chargement
+function skeletons(n = 6) {
+  return Array.from({ length: n }, () =>
+    '<div class="card skel" aria-hidden="true"><div class="sk img"></div><div class="sk l"></div><div class="sk l s"></div><div class="sk l s"></div></div>').join('');
 }
 
 function flash(el, msg, kind = 'ok') {

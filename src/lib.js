@@ -114,6 +114,8 @@ export const DEFAULT_SITE = {
     rent_promo_title: 'Maisons, studios et chambres à louer',
     rent_promo_text: 'Consultez les annonces par zone et par quartier, ou publiez la vôtre en quelques minutes.',
     zones_title: 'Explorer Libreville par zone',
+    discover_title: 'Découvrez le Gabon',
+    discover_subtitle: 'Plages, forêts, parcs nationaux et capitale : choisissez votre destination.',
     footer_text: 'Les établissements affichés sont des exemples fictifs. Les positions des quartiers sont approximatives.',
     rent_title: 'Maisons à louer',
     rent_subtitle: 'Maisons, villas, appartements, studios et chambres, par zone et par quartier.',
@@ -125,6 +127,8 @@ export const DEFAULT_SITE = {
     rent_promo_title: 'Accueil : titre du bloc « À louer »',
     rent_promo_text: 'Accueil : texte du bloc « À louer »',
     zones_title: 'Accueil : titre des zones',
+    discover_title: 'Accueil : titre « Découvrez le Gabon »',
+    discover_subtitle: 'Accueil : sous-titre « Découvrez le Gabon »',
     footer_text: 'Pied de page',
     rent_title: 'Page Maisons à louer : titre',
     rent_subtitle: 'Page Maisons à louer : sous-titre',
@@ -132,12 +136,16 @@ export const DEFAULT_SITE = {
   },
   sections: [
     { id: 'hero', visible: true },
+    { id: 'stats', visible: true },
+    { id: 'discover', visible: true },
     { id: 'rentpromo', visible: true },
     { id: 'results', visible: true },
     { id: 'zones', visible: true }
   ],
   section_labels: {
     hero: 'Bandeau et recherche',
+    stats: 'Chiffres clés',
+    discover: 'Découvrez le Gabon (destinations)',
     rentpromo: 'Bloc « Maisons à louer »',
     results: 'Liste et carte des hébergements',
     zones: 'Explorer par zone'
