@@ -120,3 +120,59 @@ async function fillNeighborhoods(select, placeholder) {
   });
   return geo;
 }
+
+
+// ---------- J'aime et commentaires ----------
+function timeAgo(iso) {
+  const s = Math.max(1, (Date.now() - new Date(iso).getTime()) / 1000);
+  if (s < 60) return "à l'instant";
+  if (s < 3600) return `il y a ${Math.floor(s / 60)} min`;
+  if (s < 86400) return `il y a ${Math.floor(s / 3600)} h`;
+  if (s < 2592000) return `il y a ${Math.floor(s / 86400)} j`;
+  return new Date(iso).toLocaleDateString('fr-FR');
+}
+
+async function renderSocial(box, type, id) {
+  const base = `/api/social/${type}/${encodeURIComponent(id)}`;
+  let d;
+  try { d = await api(base); } catch { box.innerHTML = ''; return; }
+  const next = encodeURIComponent(location.pathname + location.search);
+  box.innerHTML = `
+    <div class="social-head">
+      <button type="button" class="like-btn${d.liked ? ' on' : ''}" id="like-btn" aria-pressed="${d.liked}">
+        <span class="heart" aria-hidden="true">${d.liked ? '♥' : '♡'}</span> <span id="like-n">${d.likes}</span> J'aime
+      </button>
+      <h3>Commentaires (${d.comments.length})</h3>
+    </div>
+    <div id="social-msg"></div>
+    ${d.loggedIn ? `<form id="cform" class="cform">
+        <textarea name="body" rows="3" maxlength="500" placeholder="Votre commentaire (500 caractères maximum)…" required></textarea>
+        <button type="submit">Publier</button>
+      </form>`
+      : `<p class="loc login-note">Pour aimer ou commenter, <a href="/compte.html">connectez-vous ou créez un compte gratuit</a>.</p>`}
+    <ul class="comments">
+      ${d.comments.map(c => `<li data-id="${esc(c.id)}">
+        <div class="avatar" aria-hidden="true">${esc((c.name || '?').trim().charAt(0).toUpperCase())}</div>
+        <div class="cbody"><strong>${esc(c.name)}</strong> <small>${esc(timeAgo(c.createdAt))}</small>
+          <p>${esc(c.body)}</p>
+          ${c.canDelete ? `<button type="button" class="linklike" data-del="${esc(c.id)}">Supprimer</button>` : ''}</div></li>`).join('')
+        || '<li class="none">Aucun commentaire pour le moment. Soyez le premier !</li>'}
+    </ul>`;
+  const msg = $('#social-msg', box);
+  $('#like-btn', box).addEventListener('click', async () => {
+    if (!d.loggedIn) { flash(msg, "Connectez-vous pour aimer cette publication.", 'err'); return; }
+    try { await api(base + '/like', { method: 'POST' }); renderSocial(box, type, id); }
+    catch (e) { flash(msg, e.message, 'err'); }
+  });
+  const f = $('#cform', box);
+  if (f) f.addEventListener('submit', async e => {
+    e.preventDefault();
+    try { await api(base + '/comments', { json: { body: f.body.value } }); renderSocial(box, type, id); }
+    catch (err) { flash(msg, err.message, 'err'); }
+  });
+  $$('[data-del]', box).forEach(b => b.addEventListener('click', async () => {
+    if (!confirm('Supprimer ce commentaire ?')) return;
+    try { await api('/api/comments/' + b.dataset.del, { method: 'DELETE' }); renderSocial(box, type, id); }
+    catch (err) { flash(msg, err.message, 'err'); }
+  }));
+}

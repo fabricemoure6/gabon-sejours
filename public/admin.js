@@ -3,7 +3,7 @@ let me = null;
 let tab = 'overview';
 const TABS = [
   ['overview', 'Tableau de bord'], ['listings', 'Annonces'], ['users', 'Utilisateurs'], ['payments', 'Paiements'],
-  ['subs', 'Abonnés'], ['plans', 'Formules et prix'], ['site', 'Textes, structure et photos'], ['bookings', 'Demandes de réservation']
+  ['subs', 'Abonnés'], ['comments', 'Commentaires'], ['plans', 'Formules et prix'], ['site', 'Textes, structure et photos'], ['bookings', 'Demandes de réservation']
 ];
 const STATUS = { expired: 'Expiré', published: 'Publiée', hidden: 'Masquée', pending: 'À payer', submitted: 'À vérifier', confirmed: 'Confirmé', rejected: 'Refusé', active: 'Actif', suspended: 'Suspendu' };
 const badge = s => `<span class="badge ${esc(s)}">${esc(STATUS[s] || s)}</span>`;
@@ -59,7 +59,7 @@ function renderShell() {
     <section id="panel" class="card-box"></section>`;
   $$('[data-tab]').forEach(b => b.addEventListener('click', () => { tab = b.dataset.tab; renderShell(); }));
   $('#logout').addEventListener('click', async () => { await api('/api/auth/logout', { method: 'POST' }); me = null; start(); });
-  const fn = { overview, listings, users, payments, subs, plans, site, bookings }[tab];
+  const fn = { overview, listings, users, payments, subs, comments, plans, site, bookings }[tab];
   fn($('#panel')).catch(err => { $('#panel').innerHTML = `<div class="msg err">${esc(err.message)}</div>`; });
 }
 
@@ -119,6 +119,23 @@ async function payments(el) {
   $$('[data-c]', el).forEach(b => b.addEventListener('click', async () => {
     if (b.dataset.c === 'confirm' && !confirm('Confirmer la réception du paiement et activer la formule ?')) return;
     await api(`/api/admin/payments/${b.dataset.id}/${b.dataset.c}`, { method: 'POST' }); payments(el);
+  }));
+}
+
+async function comments(el) {
+  const list = await api('/api/admin/comments');
+  el.innerHTML = `<h2>Commentaires (${list.length})</h2>
+    <p class="loc">Les commentaires sont publiés tout de suite. Supprimez ceux qui sont injurieux, trompeurs ou publicitaires.</p>
+    ${list.length ? `<div class="table-wrap"><table>
+    <thead><tr><th>Date</th><th>Auteur</th><th>Publication</th><th>Commentaire</th><th></th></tr></thead><tbody>
+    ${list.map(c => `<tr><td>${date(c.created_at)}</td><td>${esc(c.user_name)}<br><small>${esc(c.user_email)}</small></td>
+      <td><a href="${c.target_type === 'listing' ? '/annonce.html?id=' : '/stay.html?id='}${esc(c.target_id)}" target="_blank" rel="noopener">${esc(c.title)}</a></td>
+      <td>${esc(c.body)}</td>
+      <td><button type="button" class="small danger" data-cd="${esc(c.id)}">Supprimer</button></td></tr>`).join('')}
+    </tbody></table></div>` : '<p class="loc">Aucun commentaire pour le moment.</p>'}`;
+  $$('[data-cd]', el).forEach(b => b.addEventListener('click', async () => {
+    if (!confirm('Supprimer ce commentaire ?')) return;
+    await api('/api/comments/' + b.dataset.cd, { method: 'DELETE' }); comments(el);
   }));
 }
 

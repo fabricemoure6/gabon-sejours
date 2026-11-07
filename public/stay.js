@@ -10,6 +10,7 @@ async function init() {
   const today = new Date().toISOString().slice(0, 10);
   const hasGeo = typeof s.lat === 'number';
   const where = [s.area, s.city].filter(Boolean).join(', ');
+  renderSocial(document.getElementById('social'), 'stay', s.id);
   const gmaps = hasGeo ? `https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lng}` : '';
   const route = hasGeo ? `https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lng}` : '';
 

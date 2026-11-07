@@ -116,3 +116,24 @@ table small{color:var(--muted)}
 .zone .loc,.zone p,.zone small{color:var(--muted)}
 .zone h3{color:var(--navy)}
 .hero-media::before{background:#ffc83d;opacity:.16}
+
+/* ---------- J'aime et commentaires ---------- */
+.social{max-width:1100px;margin:0 auto 40px;padding:22px;background:#fff;color:var(--ink);border-radius:18px}
+.social-head{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:12px}
+.social-head h3{margin:0;color:var(--navy)}
+.like-btn{background:#fff;color:var(--navy);border:2px solid var(--navy);box-shadow:none;display:inline-flex;gap:8px;align-items:center}
+.like-btn .heart{font-size:1.25rem;line-height:1}
+.like-btn.on{background:var(--red);border-color:var(--red);color:#fff}
+.cform{display:grid;gap:10px;margin:10px 0 16px}
+.cform textarea{width:100%;border:1px solid #b9c7de;border-radius:12px;padding:12px;font:inherit;color:var(--ink)}
+.cform button{justify-self:end}
+.login-note{margin:6px 0 14px;color:var(--muted)}
+.login-note a{color:var(--navy);font-weight:700}
+.comments{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.comments li{display:flex;gap:12px;padding:12px;background:var(--sand);border-radius:12px}
+.comments li.none{display:block;color:var(--muted);text-align:center}
+.avatar{flex:none;width:40px;height:40px;border-radius:50%;background:var(--navy);color:var(--gold);display:grid;place-items:center;font-family:var(--serif);font-weight:800}
+.cbody p{margin:4px 0;white-space:pre-wrap;overflow-wrap:anywhere}
+.cbody small{color:var(--muted)}
+.linklike{background:none;box-shadow:none;color:var(--red);padding:0;font-size:.85rem;font-family:inherit;font-weight:600}
+@media(max-width:600px){.social{margin:0 12px 30px;padding:16px}}

@@ -86,6 +86,12 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS site_config (key TEXT PRIMARY KEY, value TEXT NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS requests (id TEXT PRIMARY KEY, created_at TEXT, stay_id TEXT, name TEXT, phone TEXT,
      check_in TEXT, check_out TEXT, guests INTEGER, message TEXT, nights INTEGER, total INTEGER)`,
+  `CREATE TABLE IF NOT EXISTS likes (user_id TEXT NOT NULL, target_type TEXT NOT NULL, target_id TEXT NOT NULL, created_at TEXT,
+     PRIMARY KEY (user_id, target_type, target_id))`,
+  `CREATE TABLE IF NOT EXISTS comments (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, target_type TEXT NOT NULL, target_id TEXT NOT NULL,
+     body TEXT NOT NULL, created_at TEXT)`,
+  `CREATE INDEX IF NOT EXISTS idx_comments_target ON comments(target_type, target_id)`,
+  `CREATE INDEX IF NOT EXISTS idx_likes_target ON likes(target_type, target_id)`,
   `CREATE INDEX IF NOT EXISTS idx_listings_owner ON listings(owner_id)`,
   `CREATE INDEX IF NOT EXISTS idx_photos_listing ON photos(listing_id)`
 ];

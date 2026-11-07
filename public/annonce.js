@@ -41,6 +41,7 @@ async function init() {
       <p class="loc">Gabon Séjours met en relation locataires et propriétaires. Ne payez jamais avant d'avoir visité le bien et rencontré le propriétaire.</p>
     </aside>`;
 
+  renderSocial($('#social'), 'listing', l.id);
   $$('.thumb-btn').forEach(b => b.addEventListener('click', () => { $('#main-photo').src = '/api/photos/' + b.dataset.p; }));
 
   if (hasGeo && typeof L !== 'undefined') {

@@ -132,6 +132,12 @@ function parseListing(b) {
   return { v };
 }
 
+async function socialTargetExists(env, type, id) {
+  if (type === 'stay') return loadStays().some(s => s.id === id);
+  if (!/^[a-f0-9]{16}$/.test(id)) return false;
+  return !!(await env.DB.prepare(`SELECT 1 AS x FROM listings WHERE id=?1 AND status!='removed'`).bind(id).first());
+}
+
 function heroPhotos(st) {
   const l = Array.isArray(st.hero_photos) ? st.hero_photos : [];
   return l.length ? l : (st.hero_photo_id ? [st.hero_photo_id] : []);
@@ -408,9 +414,69 @@ export default {
         return json({ ok: true });
       }
 
+      // ----- Public : likes et commentaires (lecture) -----
+      if (method === 'GET' && (m = p.match(/^\/api\/social\/(listing|stay)\/([\w-]{1,60})$/))) {
+        if (!(await socialTargetExists(env, m[1], m[2]))) return bad('Publication introuvable', 404);
+        const me = await currentUser(request, env);
+        const likes = (await env.DB.prepare('SELECT COUNT(*) AS n FROM likes WHERE target_type=?1 AND target_id=?2').bind(m[1], m[2]).first()).n;
+        const liked = me ? !!(await env.DB.prepare('SELECT 1 AS x FROM likes WHERE user_id=?1 AND target_type=?2 AND target_id=?3').bind(me.id, m[1], m[2]).first()) : false;
+        const { results } = await env.DB.prepare(
+          `SELECT c.id,c.body,c.created_at,c.user_id,u.name FROM comments c JOIN users u ON u.id=c.user_id
+           WHERE c.target_type=?1 AND c.target_id=?2 AND u.status='active' ORDER BY c.created_at DESC LIMIT 100`).bind(m[1], m[2]).all();
+        let manage = !!me && isAdmin(me);
+        if (me && !manage && m[1] === 'listing') {
+          const l = await env.DB.prepare('SELECT owner_id FROM listings WHERE id=?1').bind(m[2]).first();
+          manage = !!l && l.owner_id === me.id;
+        }
+        return json({
+          likes, liked, loggedIn: !!me,
+          comments: results.map(c => ({ id: c.id, body: c.body, createdAt: c.created_at, name: c.name || 'Membre',
+            mine: !!me && c.user_id === me.id, canDelete: manage || (!!me && c.user_id === me.id) }))
+        });
+      }
+
       // ===== À partir d'ici : connexion obligatoire =====
       const user = await requireAuth(request, env);
       if (!user) return bad('Connexion requise', 401);
+
+      // ----- Likes et commentaires (écriture) -----
+      if (method === 'POST' && (m = p.match(/^\/api\/social\/(listing|stay)\/([\w-]{1,60})\/like$/))) {
+        if (!(await socialTargetExists(env, m[1], m[2]))) return bad('Publication introuvable', 404);
+        const del = await env.DB.prepare('DELETE FROM likes WHERE user_id=?1 AND target_type=?2 AND target_id=?3').bind(user.id, m[1], m[2]).run();
+        let liked = false;
+        if (!del.meta.changes) {
+          await env.DB.prepare('INSERT INTO likes (user_id,target_type,target_id,created_at) VALUES (?1,?2,?3,?4)').bind(user.id, m[1], m[2], new Date().toISOString()).run();
+          liked = true;
+        }
+        const likes = (await env.DB.prepare('SELECT COUNT(*) AS n FROM likes WHERE target_type=?1 AND target_id=?2').bind(m[1], m[2]).first()).n;
+        return json({ liked, likes });
+      }
+      if (method === 'POST' && (m = p.match(/^\/api\/social\/(listing|stay)\/([\w-]{1,60})\/comments$/))) {
+        if (!(await socialTargetExists(env, m[1], m[2]))) return bad('Publication introuvable', 404);
+        const b = await request.json().catch(() => ({}));
+        const body = String(b.body || '').replace(/\s+/g, ' ').trim();
+        if (body.length < 2) return bad('Écrivez un commentaire');
+        if (body.length > 500) return bad('Commentaire trop long (500 caractères maximum)');
+        const since = new Date(Date.now() - 3600e3).toISOString();
+        const recent = (await env.DB.prepare('SELECT COUNT(*) AS n FROM comments WHERE user_id=?1 AND created_at>?2').bind(user.id, since).first()).n;
+        if (recent >= 8) return bad('Trop de commentaires en peu de temps. Réessayez plus tard.', 429);
+        const id = uid();
+        const at = new Date().toISOString();
+        await env.DB.prepare('INSERT INTO comments (id,user_id,target_type,target_id,body,created_at) VALUES (?1,?2,?3,?4,?5,?6)').bind(id, user.id, m[1], m[2], body, at).run();
+        return json({ id, body, createdAt: at, name: user.name || 'Membre', mine: true }, 201);
+      }
+      if (method === 'DELETE' && (m = p.match(/^\/api\/comments\/([a-f0-9]{16})$/))) {
+        const c = await env.DB.prepare('SELECT * FROM comments WHERE id=?1').bind(m[1]).first();
+        if (!c) return bad('Commentaire introuvable', 404);
+        let allowed = c.user_id === user.id || isAdmin(user);
+        if (!allowed && c.target_type === 'listing') {
+          const l = await env.DB.prepare('SELECT owner_id FROM listings WHERE id=?1').bind(c.target_id).first();
+          allowed = !!l && l.owner_id === user.id;
+        }
+        if (!allowed) return bad('Action non autorisée', 403);
+        await env.DB.prepare('DELETE FROM comments WHERE id=?1').bind(m[1]).run();
+        return json({ ok: true });
+      }
 
       // ----- Photos -----
       if (method === 'POST' && p === '/api/photos') return uploadPhoto(request, env, user);
@@ -559,6 +625,14 @@ export default {
           await env.DB.prepare('UPDATE users SET status=?2 WHERE id=?1').bind(m[1], b.status).run();
           if (b.status === 'suspended') await env.DB.prepare('DELETE FROM sessions WHERE user_id=?1').bind(m[1]).run();
           return json({ ok: true });
+        }
+        if (method === 'GET' && p === '/api/admin/comments') {
+          const { results } = await env.DB.prepare(
+            `SELECT c.id,c.body,c.created_at,c.target_type,c.target_id,u.name AS user_name,u.email AS user_email,
+             (SELECT title FROM listings l WHERE c.target_type='listing' AND l.id=c.target_id) AS title
+             FROM comments c JOIN users u ON u.id=c.user_id ORDER BY c.created_at DESC LIMIT 200`).all();
+          const stays = loadStays();
+          return json(results.map(r => ({ ...r, title: r.title || (stays.find(s => s.id === r.target_id) || {}).name || r.target_id })));
         }
         if (method === 'GET' && p === '/api/admin/subscriptions') {
           const { results } = await env.DB.prepare(
