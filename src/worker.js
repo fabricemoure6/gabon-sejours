@@ -560,6 +560,15 @@ export default {
           if (b.status === 'suspended') await env.DB.prepare('DELETE FROM sessions WHERE user_id=?1').bind(m[1]).run();
           return json({ ok: true });
         }
+        if (method === 'GET' && p === '/api/admin/subscriptions') {
+          const { results } = await env.DB.prepare(
+            `SELECT s.id,s.status,s.started_at,s.expires_at,u.name AS user_name,u.email AS user_email,u.phone AS user_phone,
+             pl.name AS plan_name,pl.price,pl.max_listings,
+             (SELECT COUNT(*) FROM listings l WHERE l.owner_id=u.id AND l.status!='removed') AS listings
+             FROM subscriptions s JOIN users u ON u.id=s.user_id JOIN plans pl ON pl.id=s.plan_id
+             ORDER BY s.started_at DESC LIMIT 300`).all();
+          return json(results);
+        }
         if (method === 'GET' && p === '/api/admin/payments') {
           const { results } = await env.DB.prepare(
             `SELECT p.id,p.amount,p.method,p.reference,p.txn_ref,p.status,p.created_at,p.confirmed_at,

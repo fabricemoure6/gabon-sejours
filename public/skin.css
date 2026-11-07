@@ -1,0 +1,118 @@
+/* Thème « Média » inspiré de GCU : bleu profond #003779, jaune #ffde59, titres League Spartan.
+   Chargé en dernier : surcharge theme.css et styles.css. */
+:root{
+  --navy:#003779;--navy-d:#002a5c;--navy-l:#0a4a9a;--gold:#ffde59;--red:#d81f26;
+  --green:#003779;--forest:#002a5c;--yellow:#ffde59;--blue:#0a4a9a;
+  --ink:#10213d;--muted:#52627d;--bg:#003779;--card:#fff;--line:#d8e1ef;--sand:#eef3fa;
+  --serif:"League Spartan","Inter",system-ui,sans-serif;
+  --shadow:0 12px 30px -14px rgba(0,20,60,.55);
+}
+body{background:var(--navy);color:#fff}
+h1,h2,h3,.brand{font-family:var(--serif);font-weight:800;letter-spacing:0}
+h2{text-transform:uppercase;letter-spacing:.01em}
+
+/* Bandeau supérieur */
+.top{background:var(--navy);border-bottom:0;box-shadow:0 1px 0 rgba(255,255,255,.08)}
+.top.scrolled{border-bottom-color:transparent;box-shadow:0 8px 24px -12px rgba(0,0,0,.6)}
+.brand,.brand span{color:#fff;font-weight:800;text-transform:uppercase}
+.brand span{color:var(--gold)}
+.top nav a{color:#fff;font-family:var(--serif);font-weight:700}
+.top nav a::after{background:var(--gold)}
+.top nav a[aria-current=page]{color:var(--gold)}
+
+/* Boutons : jaune (action) / contour */
+button,.btn{background:var(--gold);color:#10213d;font-family:var(--serif);font-weight:800;box-shadow:0 6px 16px -8px rgba(255,222,89,.55)}
+button:disabled{opacity:.5}
+.btn.alt,button.alt{border-color:var(--gold);color:var(--gold);background:transparent}
+.box .btn.alt,.card-box .btn.alt,.card-box button.alt{color:var(--navy);border-color:var(--navy)}
+.btn.wa{background:#1fa855;color:#fff}
+.danger{background:var(--red)!important;color:#fff!important}
+.chip{background:var(--navy-l);color:#fff;border-color:rgba(255,255,255,.18)}
+.chip:hover,.chip.on{background:var(--gold);color:#10213d}
+.ghost{color:#fff;border-color:rgba(255,255,255,.7)}
+.ghost.dark{color:var(--navy);border-color:var(--navy);background:transparent}
+
+/* Bandeau d'accueil */
+.hero-media{background:linear-gradient(160deg,#002a5c 0%,#003779 55%,#0a4a9a 100%)}
+.hero-media::before{background:var(--gold);opacity:.22}
+.hero-media::after{background:#2d8cff;opacity:.28}
+.hero h1{text-transform:uppercase}
+.hero .search{background:rgba(255,255,255,.97);color:var(--ink)}
+.hero .search label,.hero .search .f{color:var(--muted)}
+
+/* Sections sur fond bleu */
+.stats .stat,.stat{background:#fff;color:var(--ink)}
+.stat strong,.stats strong{color:var(--navy);font-family:var(--serif)}
+.discover h2,.zones h2,.results h2,.section-title,main>h2,main>h1,.page-title{color:#fff}
+.discover h2::before,.zones h2::before{content:"";display:inline-block;width:6px;height:1.1em;background:var(--gold);border-radius:3px;margin-right:12px;vertical-align:-.15em}
+.discover p,.zones p,.results .loc,.loc{color:#c9d8ef}
+.tile{background:var(--navy-l);border-color:rgba(255,255,255,.12);color:#fff}
+.tile-art{background:linear-gradient(140deg,#0a4a9a,#002a5c)}
+.tile-body strong{color:#fff;font-weight:800}
+.tile-body span{color:#c9d8ef}
+.tile-body em{color:var(--gold)}
+.promo{background:linear-gradient(120deg,var(--navy-l),var(--navy-d));border:1px solid rgba(255,255,255,.12)}
+.promo::after{background:radial-gradient(circle,rgba(255,222,89,.5),transparent 70%)}
+.promo .btn.alt{color:var(--gold);border-color:var(--gold)}
+
+/* Cartes d'hébergements et panneaux : fond clair, texte sombre (lisible) */
+.card,.zone,.plan,.my-item,.box,.card-box,.panel{background:#fff;color:var(--ink);border-color:transparent}
+.card h3,.zone h3,.card-box h1,.card-box h2,.card-box h3,.box h3,.plan h3{color:var(--navy);text-transform:none}
+.card-box .loc,.box .loc,.card .loc{color:var(--muted)}
+.zone-tag,.card .more{color:var(--navy)}
+.score{background:var(--navy)}
+.price{color:var(--navy)}
+.pic.hotel{background:linear-gradient(135deg,#002a5c,#0a4a9a)}
+.pic.apartment{background:linear-gradient(135deg,#0a4a9a,#2d8cff)}
+.pic.lodge{background:linear-gradient(135deg,#7a5a00,#ffde59)}
+.tag{background:rgba(255,222,89,.95);color:#10213d}
+.switch button{background:var(--navy-l);color:#fff}
+.switch button.on,.tabs button.on{background:var(--gold);color:#10213d;border-color:var(--gold)}
+.tabs button{background:var(--navy-l);color:#fff;border-color:rgba(255,255,255,.15)}
+
+footer{background:var(--navy-d);color:#c9d8ef;border-top:4px solid var(--gold)}
+.msg.err{background:#fde8e8;color:#8a1f1f}
+
+/* ---------- Administration : lecture claire ---------- */
+.page-wide{max-width:1400px}
+.head-row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.head-row h1{color:#fff;margin:0;text-transform:uppercase}
+.tabs{border-bottom:2px solid rgba(255,255,255,.15);padding-bottom:10px}
+.tabs button{border-radius:10px;font-size:.95rem}
+#panel.card-box{padding:22px;border-radius:18px}
+#panel h2{color:var(--navy);text-transform:none;font-size:1.5rem;margin:0 0 6px}
+#panel h2::before{display:none}
+#panel h3{margin:22px 0 8px;padding-bottom:6px;border-bottom:2px solid var(--gold);color:var(--navy)}
+#panel label{color:var(--ink);font-weight:600;font-size:.92rem}
+#panel input,#panel textarea,#panel select{color:var(--ink);background:#fff;border:1px solid #b9c7de;border-radius:10px;font-size:1rem}
+#panel textarea{width:100%;font-family:inherit;line-height:1.45}
+#panel input:focus,#panel textarea:focus,#panel select:focus{outline:3px solid rgba(0,55,121,.25);border-color:var(--navy)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px}
+#panel .tile{background:linear-gradient(160deg,#fff,var(--sand));border:1px solid var(--line);border-top:4px solid var(--gold);color:var(--ink);padding:18px;border-radius:14px;box-shadow:none}
+#panel .tile:hover{transform:none}
+#panel .tile strong{display:block;font-family:var(--serif);font-size:2.4rem;line-height:1;color:var(--navy)}
+#panel .tile span{color:var(--muted);font-weight:600}
+.table-wrap{border:1px solid var(--line);border-radius:12px}
+table{font-size:.95rem;color:var(--ink)}
+thead th{background:var(--navy);color:#fff;font-family:var(--serif);font-weight:700;text-align:left;padding:12px 14px;white-space:nowrap;position:sticky;top:0}
+tbody td{padding:12px 14px;border-top:1px solid var(--line);vertical-align:top}
+tbody tr:nth-child(even){background:#f5f8fd}
+tbody tr:hover{background:#fff8d6}
+table a{color:var(--navy);font-weight:700;text-decoration:underline}
+table small{color:var(--muted)}
+.acts{display:flex;gap:6px;flex-wrap:wrap}
+.badge{background:#dff3e6;color:#0b5a2b;font-size:.8rem}
+.badge.active,.badge.published,.badge.confirmed{background:#dff3e6;color:#0b5a2b}
+.badge.expired,.badge.rejected,.badge.removed{background:#fde8e8;color:#8a1f1f}
+.badge.hidden,.badge.pending,.badge.suspended{background:#fff1c2;color:#6b4a00}
+.badge.submitted{background:#dce9fb;color:#003779}
+.sections li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;margin-bottom:6px;background:var(--sand);border:1px solid var(--line);border-radius:10px;color:var(--ink)}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.mini{width:56px;height:42px;object-fit:cover;border-radius:6px}
+@media(max-width:700px){.two-col{grid-template-columns:1fr}}
+
+/* Corrections de contraste */
+#count,.empty,.results label,.toolbar,.bar{color:#dbe6f7}
+.zone .loc,.zone p,.zone small{color:var(--muted)}
+.zone h3{color:var(--navy)}
+.hero-media::before{background:#ffc83d;opacity:.16}

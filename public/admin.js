@@ -3,9 +3,9 @@ let me = null;
 let tab = 'overview';
 const TABS = [
   ['overview', 'Tableau de bord'], ['listings', 'Annonces'], ['users', 'Utilisateurs'], ['payments', 'Paiements'],
-  ['plans', 'Abonnements'], ['site', 'Textes, structure et photos'], ['bookings', 'Demandes de réservation']
+  ['subs', 'Abonnés'], ['plans', 'Formules et prix'], ['site', 'Textes, structure et photos'], ['bookings', 'Demandes de réservation']
 ];
-const STATUS = { published: 'Publiée', hidden: 'Masquée', pending: 'À payer', submitted: 'À vérifier', confirmed: 'Confirmé', rejected: 'Refusé', active: 'Actif', suspended: 'Suspendu' };
+const STATUS = { expired: 'Expiré', published: 'Publiée', hidden: 'Masquée', pending: 'À payer', submitted: 'À vérifier', confirmed: 'Confirmé', rejected: 'Refusé', active: 'Actif', suspended: 'Suspendu' };
 const badge = s => `<span class="badge ${esc(s)}">${esc(STATUS[s] || s)}</span>`;
 const date = d => d ? new Date(d).toLocaleDateString('fr-FR') : '';
 
@@ -59,7 +59,7 @@ function renderShell() {
     <section id="panel" class="card-box"></section>`;
   $$('[data-tab]').forEach(b => b.addEventListener('click', () => { tab = b.dataset.tab; renderShell(); }));
   $('#logout').addEventListener('click', async () => { await api('/api/auth/logout', { method: 'POST' }); me = null; start(); });
-  const fn = { overview, listings, users, payments, plans, site, bookings }[tab];
+  const fn = { overview, listings, users, payments, subs, plans, site, bookings }[tab];
   fn($('#panel')).catch(err => { $('#panel').innerHTML = `<div class="msg err">${esc(err.message)}</div>`; });
 }
 
@@ -120,6 +120,23 @@ async function payments(el) {
     if (b.dataset.c === 'confirm' && !confirm('Confirmer la réception du paiement et activer la formule ?')) return;
     await api(`/api/admin/payments/${b.dataset.id}/${b.dataset.c}`, { method: 'POST' }); payments(el);
   }));
+}
+
+async function subs(el) {
+  const list = await api('/api/admin/subscriptions');
+  const now = Date.now();
+  const state = s => s.status === 'active' && s.expires_at > now ? 'active' : 'expired';
+  const labels = { expired: 'Expiré' };
+  el.innerHTML = `<h2>Abonnés (${list.length})</h2>
+    <p class="loc">Qui est abonné, à quelle formule, et jusqu'à quand. Un abonnement dure 30 jours après confirmation du paiement.</p>
+    ${list.length ? `<div class="table-wrap"><table>
+    <thead><tr><th>Propriétaire</th><th>Formule</th><th>Prix / mois</th><th>Annonces</th><th>Début</th><th>Fin</th><th>État</th></tr></thead><tbody>
+    ${list.map(s => { const st = state(s); const days = Math.ceil((s.expires_at - now) / 864e5); return `<tr>
+      <td>${esc(s.user_name)}<br><small>${esc(s.user_email)} ${esc(s.user_phone || '')}</small></td>
+      <td>${esc(s.plan_name)}</td><td>${fcfa(s.price)}</td><td>${s.listings} / ${s.max_listings}</td>
+      <td>${date(s.started_at)}</td><td>${date(s.expires_at)}${st === 'active' ? `<br><small>${days} j restants</small>` : ''}</td>
+      <td><span class="badge ${st}">${labels[st] || STATUS[st]}</span></td></tr>`; }).join('')}
+    </tbody></table></div>` : '<p class="loc">Aucun abonnement pour le moment.</p>'}`;
 }
 
 async function plans(el) {
