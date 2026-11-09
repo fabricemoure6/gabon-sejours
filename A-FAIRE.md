@@ -14,5 +14,5 @@ Dernier changement : en-tête sobre sans zigzags (thème noir/jaune style Binanc
 2. Admin : créer le compte admin (/admin avec le code secret ADMIN_SETUP_CODE), régler les vrais prix et le numéro Airtel Money.
 3. Paiement en ligne : choisir un service (E-Billing, SingPay, pawaPay…), brancher startOnlinePayment() et le webhook.
 4. Vidéo de présentation : la refaire avec le nouveau thème.
-5. Sécurité : limiter les essais de connexion, ajouter « mot de passe oublié ».
+5. ~~Sécurité~~ FAIT (10 nov) : 5 échecs/e-mail et 20/IP par 15 min, puis blocage ; « Mot de passe oublié » = message à l'admin, qui génère un lien à usage unique (1 h) dans Admin > Utilisateurs.
 6. Option : passer en Workers Paid (5 $/mois) vers 300 Mo de photos ; vérifier la taille de la base dans le tableau de bord Cloudflare.

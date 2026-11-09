@@ -99,8 +99,13 @@ async function users(el) {
     <thead><tr><th>Nom</th><th>E-mail</th><th>Téléphone</th><th>Rôle</th><th>Annonces</th><th>Inscrit le</th><th>État</th><th></th></tr></thead><tbody>
     ${list.map(u => `<tr><td>${esc(u.name)}</td><td>${esc(u.email)}</td><td>${esc(u.phone)}</td><td>${esc(u.role === 'admin' ? 'Admin' : 'Propriétaire')}</td>
       <td>${u.listings}</td><td>${date(u.created_at)}</td><td>${badge(u.status)}</td>
-      <td>${u.role === 'admin' ? '' : `<button type="button" class="small ${u.status === 'active' ? 'danger' : ''}" data-u="${esc(u.id)}" data-s="${u.status === 'active' ? 'suspended' : 'active'}">${u.status === 'active' ? 'Suspendre' : 'Réactiver'}</button>`}</td></tr>`).join('')}
+      <td class="acts">${u.role === 'admin' ? '' : `<button type="button" class="small" data-r="${esc(u.id)}">Lien mot de passe</button><button type="button" class="small ${u.status === 'active' ? 'danger' : ''}" data-u="${esc(u.id)}" data-s="${u.status === 'active' ? 'suspended' : 'active'}">${u.status === 'active' ? 'Suspendre' : 'Réactiver'}</button>`}</td></tr>`).join('')}
     </tbody></table></div>`;
+  $$('[data-r]', el).forEach(b => b.addEventListener('click', async () => {
+    if (!confirm('Générer un lien de réinitialisation (valable 1 heure) ? Envoyez-le uniquement à la personne concernée.')) return;
+    const r = await api(`/api/admin/users/${b.dataset.r}/reset`, { method: 'POST' });
+    prompt('Lien à envoyer à l\'utilisateur (WhatsApp, SMS…) :', location.origin + r.path);
+  }));
   $$('[data-u]', el).forEach(b => b.addEventListener('click', async () => {
     await api(`/api/admin/users/${b.dataset.u}/status`, { json: { status: b.dataset.s } }); users(el);
   }));

@@ -63,6 +63,11 @@
           ${m.reply ? `<div class="reply-box"><small>Réponse de l'administrateur</small><p>${esc(m.reply)}</p></div>` : '<p class="loc">En attente de réponse.</p>'}</article>`).join('');
       } catch { /* ignoré */ }
     });
+    if (new URLSearchParams(location.search).get('sujet') === 'mdp') {
+      const f0 = document.getElementById('contact');
+      f0.subject.value = 'Problème de compte';
+      f0.body.value = 'J\'ai oublié mon mot de passe. Merci de m\'envoyer un lien de réinitialisation. E-mail du compte : ';
+    }
     document.getElementById('contact').addEventListener('submit', async e => {
       e.preventDefault();
       const f = e.target, fb = document.getElementById('cfb');

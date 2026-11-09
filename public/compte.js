@@ -21,6 +21,7 @@ function renderAuth(mode = 'login') {
           <input name="password" type="password" autocomplete="${mode === 'login' ? 'current-password' : 'new-password'}" required minlength="${mode === 'register' ? 8 : 1}"></label>
         <button type="submit">${mode === 'login' ? 'Se connecter' : 'Créer mon compte'}</button>
         <div id="fb"></div>
+        ${mode === 'login' ? '<p class="loc"><a href="/contact.html?sujet=mdp">Mot de passe oublié ?</a></p>' : ''}
       </form>
     </div>`;
   $$('[data-mode]').forEach(b => b.addEventListener('click', () => renderAuth(b.dataset.mode)));
@@ -30,6 +31,29 @@ function renderAuth(mode = 'login') {
     try {
       await api(mode === 'login' ? '/api/auth/login' : '/api/auth/register', { json: body });
       await start();
+    } catch (err) { flash($('#fb'), err.message, 'err'); }
+  });
+}
+
+// ---------- Nouveau mot de passe (lien fourni par l'administrateur) ----------
+function renderReset(token) {
+  app.innerHTML = `
+    <div class="card-box">
+      <h1>Nouveau mot de passe</h1>
+      <p class="loc">Choisissez un nouveau mot de passe (8 caractères minimum). Ce lien ne sert qu'une fois.</p>
+      <form id="reset" class="stack">
+        <label>Nouveau mot de passe<input name="password" type="password" autocomplete="new-password" required minlength="8"></label>
+        <button type="submit">Enregistrer</button>
+        <div id="fb"></div>
+      </form>
+    </div>`;
+  $('#reset').addEventListener('submit', async e => {
+    e.preventDefault();
+    try {
+      await api('/api/auth/reset', { json: { token, password: e.target.password.value } });
+      history.replaceState(null, '', '/compte.html');
+      renderAuth('login');
+      flash($('#fb'), 'Mot de passe modifié. Vous pouvez vous connecter.', 'ok');
     } catch (err) { flash($('#fb'), err.message, 'err'); }
   });
 }
@@ -305,6 +329,8 @@ async function cleanupAndClose() {
 async function start() {
   me = await initNav('/compte.html');
   applySite();
+  const rt = new URLSearchParams(location.search).get('reset');
+  if (rt && !me) { renderReset(rt); return; }
   if (!me) { renderAuth('login'); return; }
   await renderDashboard();
 }

@@ -261,17 +261,54 @@ async function register(request, env, secure, role = 'owner') {
   return json({ ok: true, user: { id, email, name, role } }, 201, { 'set-cookie': cookie });
 }
 
+// Limite des essais de connexion : 5 échecs par e-mail et 20 par adresse IP sur 15 minutes
+const LOGIN_WINDOW = 15 * 60000, MAX_FAIL_EMAIL = 5, MAX_FAIL_IP = 20;
+async function failCount(env, key, since) {
+  const r = await env.DB.prepare('SELECT COUNT(*) AS n FROM login_attempts WHERE key=?1 AND at>?2').bind(key, since).first();
+  return r ? r.n : 0;
+}
+
 async function login(request, env, secure) {
   const b = await readJson(request);
   if (!b) return bad('Requête invalide');
   const email = cleanText(b.email, 254).toLowerCase();
+  const now = Date.now(), since = now - LOGIN_WINDOW;
+  const kEmail = 'e:' + await sha256(email), kIp = 'i:' + await sha256(request.headers.get('cf-connecting-ip') || 'local');
+  if ((await failCount(env, kEmail, since)) >= MAX_FAIL_EMAIL || (await failCount(env, kIp, since)) >= MAX_FAIL_IP) {
+    return bad('Trop d\'essais de connexion. Réessayez dans 15 minutes ou utilisez « Mot de passe oublié ».', 429);
+  }
   const u = await env.DB.prepare('SELECT * FROM users WHERE email=?1').bind(email).first();
   // même coût de calcul que l'utilisateur existe ou non
   const { hash } = await hashPassword(String(b.password || ''), u ? u.salt : rand(16));
-  if (!u || !safeEqual(hash, u.pass_hash)) return bad('E-mail ou mot de passe incorrect', 401);
+  if (!u || !safeEqual(hash, u.pass_hash)) {
+    await env.DB.batch([
+      env.DB.prepare('INSERT INTO login_attempts (key,at) VALUES (?1,?2),(?3,?2)').bind(kEmail, now, kIp),
+      env.DB.prepare('DELETE FROM login_attempts WHERE at<?1').bind(now - 86400000)
+    ]);
+    return bad('E-mail ou mot de passe incorrect', 401);
+  }
   if (u.status !== 'active') return bad('Ce compte est suspendu', 403);
+  await env.DB.prepare('DELETE FROM login_attempts WHERE key=?1').bind(kEmail).run();
   const cookie = await createSession(env, u.id, secure);
   return json({ ok: true, user: { id: u.id, email: u.email, name: u.name, role: u.role } }, 200, { 'set-cookie': cookie });
+}
+
+// Réinitialisation du mot de passe : lien à usage unique (1 h) généré par l'administrateur
+async function resetPassword(request, env) {
+  const b = await readJson(request);
+  if (!b) return bad('Requête invalide');
+  const password = String(b.password || '');
+  if (password.length < 8 || password.length > 200) return bad('Le mot de passe doit contenir au moins 8 caractères');
+  const th = await sha256(String(b.token || ''));
+  const t = await env.DB.prepare('SELECT user_id FROM reset_tokens WHERE token_hash=?1 AND expires_at>?2').bind(th, Date.now()).first();
+  if (!t) return bad('Lien invalide ou expiré. Demandez-en un nouveau à l\'administrateur.', 400);
+  const { hash, salt } = await hashPassword(password);
+  await env.DB.batch([
+    env.DB.prepare('UPDATE users SET pass_hash=?2, salt=?3 WHERE id=?1').bind(t.user_id, hash, salt),
+    env.DB.prepare('DELETE FROM reset_tokens WHERE user_id=?1').bind(t.user_id),
+    env.DB.prepare('DELETE FROM sessions WHERE user_id=?1').bind(t.user_id)
+  ]);
+  return json({ ok: true });
 }
 
 // ---------- Photos ----------
@@ -377,6 +414,7 @@ export default {
       // ----- Authentification -----
       if (method === 'POST' && p === '/api/auth/register') return register(request, env, secure);
       if (method === 'POST' && p === '/api/auth/login') return login(request, env, secure);
+      if (method === 'POST' && p === '/api/auth/reset') return resetPassword(request, env);
       if (method === 'POST' && p === '/api/auth/logout') {
         await destroySession(request, env);
         return json({ ok: true }, 200, { 'set-cookie': clearCookie(secure) });
@@ -659,6 +697,17 @@ export default {
           await env.DB.prepare('UPDATE users SET status=?2 WHERE id=?1').bind(m[1], b.status).run();
           if (b.status === 'suspended') await env.DB.prepare('DELETE FROM sessions WHERE user_id=?1').bind(m[1]).run();
           return json({ ok: true });
+        }
+        if (method === 'POST' && (m = p.match(/^\/api\/admin\/users\/([a-f0-9]{16})\/reset$/))) {
+          const target = await env.DB.prepare('SELECT role FROM users WHERE id=?1').bind(m[1]).first();
+          if (!target) return bad('Utilisateur introuvable', 404);
+          if (target.role === 'admin') return bad('Réinitialisation impossible pour un compte administrateur', 403);
+          const token = rand(32);
+          await env.DB.batch([
+            env.DB.prepare('DELETE FROM reset_tokens WHERE user_id=?1 OR expires_at<?2').bind(m[1], Date.now()),
+            env.DB.prepare('INSERT INTO reset_tokens (token_hash,user_id,expires_at) VALUES (?1,?2,?3)').bind(await sha256(token), m[1], Date.now() + 3600000)
+          ]);
+          return json({ path: '/compte.html?reset=' + token });
         }
         if (method === 'GET' && p === '/api/admin/messages') {
           const { results } = await env.DB.prepare(
