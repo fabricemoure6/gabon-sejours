@@ -228,8 +228,67 @@ async function confirmPayment(env, payment) {
 // Point d'extension : brancher ici un prestataire de paiement en ligne (Airtel Money, carte bancaire).
 // Doit renvoyer { redirectUrl } pour envoyer le client vers la page de paiement du prestataire,
 // ou null pour rester en mode manuel (validation par l'administrateur).
-async function startOnlinePayment(/* env, payment, plan, user */) {
-  return null;
+// SingPay (Airtel Money, Moov Money, carte) : page de paiement hébergée par SingPay ("ext").
+// Actif seulement si SINGPAY_CLIENT_ID, SINGPAY_CLIENT_SECRET et SINGPAY_WALLET sont définis dans Cloudflare.
+const SINGPAY_BASE = 'https://gateway.singpay.ga/v1';
+const singpayOn = env => !!(env.SINGPAY_CLIENT_ID && env.SINGPAY_CLIENT_SECRET && env.SINGPAY_WALLET);
+
+async function singpayCall(env, method, path, body) {
+  const res = await fetch((env.SINGPAY_BASE_URL || SINGPAY_BASE) + path, {
+    method,
+    headers: {
+      'content-type': 'application/json',
+      'x-client-id': env.SINGPAY_CLIENT_ID, 'x-client-secret': env.SINGPAY_CLIENT_SECRET, 'x-wallet': env.SINGPAY_WALLET
+    },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) throw new Error('SingPay ' + res.status + ' ' + JSON.stringify(data).slice(0, 200));
+  return data;
+}
+
+async function startOnlinePayment(env, payment, plan, user, origin) {
+  if (!singpayOn(env)) return null;
+  const body = {
+    portefeuille: env.SINGPAY_WALLET, reference: payment.reference, amount: plan.price,
+    redirect_success: `${origin}/compte.html?paiement=ok&ref=${payment.reference}`,
+    redirect_error: `${origin}/compte.html?paiement=erreur&ref=${payment.reference}`
+  };
+  if (env.SINGPAY_DISBURSEMENT) body.disbursement = env.SINGPAY_DISBURSEMENT;
+  try {
+    const r = await singpayCall(env, 'POST', '/ext', body);
+    const link = r && (r.link || r.url || (r.data && (r.data.link || r.data.url)));
+    if (!link || !/^https:\/\//.test(link)) return null;
+    await env.DB.prepare(`UPDATE payments SET provider='singpay' WHERE id=?1`).bind(payment.id).run();
+    return { redirectUrl: link };
+  } catch (e) {
+    console.error('SingPay start failed', e.message);
+    return null; // retombe sur le paiement manuel
+  }
+}
+
+// Interroge SingPay (jamais le corps du webhook, non signé) pour connaître le vrai état du paiement.
+async function singpayVerify(env, pay) {
+  if (!singpayOn(env) || pay.provider !== 'singpay') return pay.status;
+  if (pay.status === 'confirmed') return 'confirmed';
+  let r;
+  try { r = await singpayCall(env, 'GET', '/transaction/api/search/by-reference/' + encodeURIComponent(pay.reference)); }
+  catch (e) { console.error('SingPay verify failed', e.message); return pay.status; }
+  const t = Array.isArray(r) ? r[0] : (r && (r.data || r.transaction)) || r;
+  if (!t) return pay.status;
+  if (t.reference && t.reference !== pay.reference) return pay.status;
+  const st = String(t.status || t.statut || '').toLowerCase();
+  const amt = Number(t.amount ?? t.montant);
+  if (/^(success|succes|succ[eè]s|paid|completed|complete|approved)/.test(st)) {
+    if (Number.isFinite(amt) && amt !== pay.amount) { console.error('SingPay amount mismatch', pay.reference); return pay.status; }
+    await confirmPayment(env, pay);
+    return 'confirmed';
+  }
+  if (/(fail|echec|échec|error|cancel|reject|expire)/.test(st)) {
+    await env.DB.prepare(`UPDATE payments SET status='rejected' WHERE id=?1 AND status NOT IN ('confirmed')`).bind(pay.id).run();
+    return 'rejected';
+  }
+  return pay.status;
 }
 
 // ---------- Utilitaires de route ----------
@@ -365,7 +424,7 @@ export default {
       await ensureSchema(env.DB);
 
       // Protection CSRF : les écritures exigent un en-tête personnalisé (impossible à envoyer depuis un autre site)
-      const isWebhook = p === '/api/payments/webhook';
+      const isWebhook = p === '/api/payments/webhook' || p === '/api/payments/singpay';
       if (!['GET', 'HEAD'].includes(method) && !isWebhook && request.headers.get('x-csrf') !== '1') {
         return bad('Requête refusée', 403);
       }
@@ -439,7 +498,7 @@ export default {
 
       // ----- Webhook de paiement (prestataire) : signature HMAC-SHA256 du corps dans l'en-tête x-signature -----
       // À ADAPTER au format réel du prestataire choisi.
-      if (isWebhook && method === 'POST') {
+      if (p === '/api/payments/webhook' && method === 'POST') {
         if (!env.PAYMENT_WEBHOOK_SECRET) return bad('Webhook non configuré', 503);
         const raw = await request.text();
         const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(env.PAYMENT_WEBHOOK_SECRET),
@@ -452,6 +511,15 @@ export default {
         if (!pay) return bad('Paiement inconnu', 404);
         if (b.status === 'success') await confirmPayment(env, pay);
         else if (b.status === 'failed') await env.DB.prepare(`UPDATE payments SET status='rejected' WHERE id=?1 AND status!='confirmed'`).bind(pay.id).run();
+        return json({ ok: true });
+      }
+
+      // Notification SingPay (non signée) : sert seulement de déclencheur, l'état est revérifié auprès de SingPay
+      if (method === 'POST' && p === '/api/payments/singpay') {
+        const b = await readJson(request) || {};
+        const ref = String(b.reference || (b.data && b.data.reference) || (b.transaction && b.transaction.reference) || '').slice(0, 40);
+        const pay = ref && await env.DB.prepare('SELECT * FROM payments WHERE reference=?1').bind(ref).first();
+        if (pay) await singpayVerify(env, pay);
         return json({ ok: true });
       }
 
@@ -634,7 +702,7 @@ export default {
         await env.DB.prepare(
           `INSERT INTO payments (id,user_id,plan_id,amount,method,provider,reference,status,created_at) VALUES (?1,?2,?3,?4,?5,'manual',?6,'pending',?7)`)
           .bind(id, user.id, plan.id, plan.price, b.method === 'card' ? 'card' : 'airtel_money', reference, new Date().toISOString()).run();
-        const online = await startOnlinePayment(env, { id, reference }, plan, user);
+        const online = await startOnlinePayment(env, { id, reference }, plan, user, url.origin);
         const site = await loadSite(env);
         return json({
           id, reference, amount: plan.price, planName: plan.name,
@@ -643,6 +711,11 @@ export default {
           airtelNumber: site.settings.airtel_number, merchantName: site.settings.merchant_name,
           instructions: site.texts.payment_instructions
         }, 201);
+      }
+      if (method === 'GET' && (m = p.match(/^\/api\/my\/payments\/(GS-[A-F0-9]{8})\/check$/))) {
+        const pay = await env.DB.prepare('SELECT * FROM payments WHERE reference=?1 AND user_id=?2').bind(m[1], user.id).first();
+        if (!pay) return bad('Paiement introuvable', 404);
+        return json({ status: await singpayVerify(env, pay) });
       }
       if (method === 'POST' && (m = p.match(/^\/api\/my\/payments\/([a-f0-9]{16})\/proof$/))) {
         const b = await readJson(request);

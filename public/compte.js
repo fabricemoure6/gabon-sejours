@@ -329,9 +329,24 @@ async function cleanupAndClose() {
 async function start() {
   me = await initNav('/compte.html');
   applySite();
-  const rt = new URLSearchParams(location.search).get('reset');
+  const qs = new URLSearchParams(location.search);
+  const rt = qs.get('reset');
   if (rt && !me) { renderReset(rt); return; }
   if (!me) { renderAuth('login'); return; }
   await renderDashboard();
+  const ref = qs.get('ref');
+  if (qs.get('paiement') && /^GS-[A-F0-9]{8}$/.test(ref || '')) {
+    history.replaceState(null, '', '/compte.html');
+    notice('Vérification de votre paiement…', 'ok');
+    for (let i = 0; i < 6; i++) {
+      try {
+        const r = await api('/api/my/payments/' + ref + '/check');
+        if (r.status === 'confirmed') { notice('Paiement reçu : votre formule est activée. Merci !', 'ok'); await renderDashboard(); return; }
+        if (r.status === 'rejected') { notice('Le paiement a échoué ou a été annulé. Vous pouvez réessayer.', 'err'); await renderDashboard(); return; }
+      } catch { /* on réessaie */ }
+      await new Promise(r => setTimeout(r, 4000));
+    }
+    notice('Paiement en attente de confirmation. Votre formule sera activée dès réception.', 'ok');
+  }
 }
 start();
