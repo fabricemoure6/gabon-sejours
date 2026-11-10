@@ -165,7 +165,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .plan{border:1px solid var(--line);border-radius:12px;padding:16px;background:#fff}
 .plan.current{border-color:var(--green);box-shadow:0 0 0 2px #cfe8da}
 .plan h3{margin:0 0 6px}
-.pay-box{border:2px solid var(--yellow);border-radius:12px;padding:16px;margin:14px 0;background:#fffdf3}
+.pay-box{border:2px solid var(--yellow);border-radius:12px;padding:16px;margin:14px 0;background:#fffdf3;color:#1f1a10}
+.pay-box h3,.pay-box li,.pay-box legend,.pay-box label,.pay-box p,.pay-box small{color:#1f1a10}
+.pay-box .off,.pay-box .off small{color:#6b6556}
 .pay-box h3{margin-top:0}
 .badge{display:inline-block;padding:2px 10px;border-radius:99px;font-size:.78rem;font-weight:700;background:#e8f1ec;color:var(--green)}
 .badge.hidden,.badge.pending,.badge.suspended{background:#fff1d6;color:#7a5200}

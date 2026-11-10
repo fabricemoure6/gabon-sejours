@@ -258,12 +258,12 @@ async function startOnlinePayment(env, payment, plan, user, origin) {
   try {
     const r = await singpayCall(env, 'POST', '/ext', body);
     const link = r && r.link;
-    if (!link || !/^https:\/\//.test(link)) return null;
+    if (!link || !/^https:\/\//.test(link)) return { error: 'Réponse SingPay sans lien de paiement : ' + JSON.stringify(r).slice(0, 200) };
     await env.DB.prepare(`UPDATE payments SET provider='singpay' WHERE id=?1`).bind(payment.id).run();
     return { redirectUrl: link };
   } catch (e) {
     console.error('SingPay start failed', e.message);
-    return null; // retombe sur le paiement manuel
+    return { error: e.message }; // le client retombe sur le paiement manuel (message de diagnostic temporaire)
   }
 }
 
@@ -708,8 +708,10 @@ export default {
         const site = await loadSite(env);
         return json({
           id, reference, amount: plan.price, planName: plan.name,
-          redirectUrl: online ? online.redirectUrl : null,
-          manual: !online,
+          redirectUrl: online && online.redirectUrl ? online.redirectUrl : null,
+          manual: !(online && online.redirectUrl),
+          singpayConfigured: singpayOn(env),
+          onlineError: online && online.error ? online.error.slice(0, 300) : null,
           airtelNumber: site.settings.airtel_number, merchantName: site.settings.merchant_name,
           instructions: site.texts.payment_instructions
         }, 201);

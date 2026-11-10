@@ -163,6 +163,8 @@ async function showPayPanel(r) {
   panel.innerHTML = `
     <div class="pay-box">
       <h3>Payer ${fcfa(r.amount)}</h3>
+      ${r.singpayConfigured === false ? '<p class="loc" style="color:#b00020">Diagnostic : SingPay n\'est pas configuré sur le serveur (variables manquantes ou non déployées).</p>' : ''}
+      ${r.onlineError ? `<p class="loc" style="color:#b00020">Diagnostic SingPay : ${esc(r.onlineError)}</p>` : ''}
       <fieldset class="methods"><legend>Moyen de paiement</legend>
         <label><input type="radio" name="m" checked> Airtel Money</label>
         <label class="off"><input type="radio" name="m" disabled> Carte bancaire <small>(bientôt disponible)</small></label>
