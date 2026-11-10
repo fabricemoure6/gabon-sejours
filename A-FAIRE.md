@@ -16,3 +16,12 @@ Dernier changement : en-tête sobre sans zigzags (thème noir/jaune style Binanc
 4. Vidéo de présentation : la refaire avec le nouveau thème.
 5. ~~Sécurité~~ FAIT (10 nov) : 5 échecs/e-mail et 20/IP par 15 min, puis blocage ; « Mot de passe oublié » = message à l'admin, qui génère un lien à usage unique (1 h) dans Admin > Utilisateurs.
 6. Option : passer en Workers Paid (5 $/mois) vers 300 Mo de photos ; vérifier la taille de la base dans le tableau de bord Cloudflare.
+
+## Demain (11 nov) : reprise du paiement SingPay
+1. Cloudflare > Settings : supprimer SINGPAY_DISBURSEMENT (inutile en test), déployer.
+2. Refaire un paiement test avec un compte propriétaire ; lire la ligne rouge « Diagnostic SingPay ».
+3. Si 401 persiste : écrire à support@singpay.ga (portefeuille en statut Pending, demander l'activation).
+4. Une fois que ça marche : retirer le message de diagnostic du panneau de paiement (public/compte.js et onlineError dans src/worker.js).
+5. Vérifier que le Client Secret a bien été renouvelé chez SingPay (l'ancien est apparu dans une capture).
+Procédure complète : document « Intégrer SingPay dans un site » (Claude Docs).
+Restent ensuite : photos réelles, compte admin et prix, vidéo de présentation, Workers Paid plus tard.
