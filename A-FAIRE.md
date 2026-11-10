@@ -25,3 +25,6 @@ Dernier changement : en-tête sobre sans zigzags (thème noir/jaune style Binanc
 5. Vérifier que le Client Secret a bien été renouvelé chez SingPay (l'ancien est apparu dans une capture).
 Procédure complète : document « Intégrer SingPay dans un site » (Claude Docs).
 Restent ensuite : photos réelles, compte admin et prix, vidéo de présentation, Workers Paid plus tard.
+
+## État au 10 nov, 13h30 : en attente de SingPay
+Identifiants et code corrects (vérifié avec /api/admin/singpay-check). Le portefeuille est en statut Pending : SingPay refuse POST /ext (401) tant qu'il n'est pas activé. Il faut écrire à support@singpay.ga. Dès l'activation : refaire un paiement test, puis retirer le message de diagnostic. Le paiement manuel Airtel Money fonctionne en attendant.
