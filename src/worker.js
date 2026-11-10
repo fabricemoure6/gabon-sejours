@@ -257,7 +257,7 @@ async function startOnlinePayment(env, payment, plan, user, origin) {
   if (env.SINGPAY_DISBURSEMENT) body.disbursement = env.SINGPAY_DISBURSEMENT;
   try {
     const r = await singpayCall(env, 'POST', '/ext', body);
-    const link = r && (r.link || r.url || (r.data && (r.data.link || r.data.url)));
+    const link = r && r.link;
     if (!link || !/^https:\/\//.test(link)) return null;
     await env.DB.prepare(`UPDATE payments SET provider='singpay' WHERE id=?1`).bind(payment.id).run();
     return { redirectUrl: link };
@@ -274,17 +274,19 @@ async function singpayVerify(env, pay) {
   let r;
   try { r = await singpayCall(env, 'GET', '/transaction/api/search/by-reference/' + encodeURIComponent(pay.reference)); }
   catch (e) { console.error('SingPay verify failed', e.message); return pay.status; }
-  const t = Array.isArray(r) ? r[0] : (r && (r.data || r.transaction)) || r;
+  const t = Array.isArray(r) ? r[0] : (r && r.transaction) || r;
   if (!t) return pay.status;
   if (t.reference && t.reference !== pay.reference) return pay.status;
-  const st = String(t.status || t.statut || '').toLowerCase();
-  const amt = Number(t.amount ?? t.montant);
-  if (/^(success|succes|succ[eè]s|paid|completed|complete|approved)/.test(st)) {
+  // Doc SingPay : status = Start | Partenaire | Terminate | Disbursement | Refund ; result (si terminé) = Success | PasswordError | BalanceError | TimeOutError | Error
+  const status = String(t.status || '');
+  const result = String(t.result || '');
+  const amt = Number(t.amount);
+  if (result === 'Success' && (status === 'Terminate' || status === 'Disbursement')) {
     if (Number.isFinite(amt) && amt !== pay.amount) { console.error('SingPay amount mismatch', pay.reference); return pay.status; }
     await confirmPayment(env, pay);
     return 'confirmed';
   }
-  if (/(fail|echec|échec|error|cancel|reject|expire)/.test(st)) {
+  if (status === 'Refund' || /^(PasswordError|BalanceError|TimeOutError|Error)$/.test(result)) {
     await env.DB.prepare(`UPDATE payments SET status='rejected' WHERE id=?1 AND status NOT IN ('confirmed')`).bind(pay.id).run();
     return 'rejected';
   }
