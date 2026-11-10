@@ -231,14 +231,15 @@ async function confirmPayment(env, payment) {
 // SingPay (Airtel Money, Moov Money, carte) : page de paiement hébergée par SingPay ("ext").
 // Actif seulement si SINGPAY_CLIENT_ID, SINGPAY_CLIENT_SECRET et SINGPAY_WALLET sont définis dans Cloudflare.
 const SINGPAY_BASE = 'https://gateway.singpay.ga/v1';
-const singpayOn = env => !!(env.SINGPAY_CLIENT_ID && env.SINGPAY_CLIENT_SECRET && env.SINGPAY_WALLET);
+const sp = (env, k) => String(env[k] || '').trim();
+const singpayOn = env => !!(sp(env, 'SINGPAY_CLIENT_ID') && sp(env, 'SINGPAY_CLIENT_SECRET') && sp(env, 'SINGPAY_WALLET'));
 
 async function singpayCall(env, method, path, body) {
   const res = await fetch((env.SINGPAY_BASE_URL || SINGPAY_BASE) + path, {
     method,
     headers: {
       'content-type': 'application/json',
-      'x-client-id': env.SINGPAY_CLIENT_ID, 'x-client-secret': env.SINGPAY_CLIENT_SECRET, 'x-wallet': env.SINGPAY_WALLET
+      'x-client-id': sp(env, 'SINGPAY_CLIENT_ID'), 'x-client-secret': sp(env, 'SINGPAY_CLIENT_SECRET'), 'x-wallet': sp(env, 'SINGPAY_WALLET')
     },
     body: body ? JSON.stringify(body) : undefined
   });
@@ -250,11 +251,11 @@ async function singpayCall(env, method, path, body) {
 async function startOnlinePayment(env, payment, plan, user, origin) {
   if (!singpayOn(env)) return null;
   const body = {
-    portefeuille: env.SINGPAY_WALLET, reference: payment.reference, amount: plan.price,
+    portefeuille: sp(env, 'SINGPAY_WALLET'), reference: payment.reference, amount: plan.price,
     redirect_success: `${origin}/compte.html?paiement=ok&ref=${payment.reference}`,
     redirect_error: `${origin}/compte.html?paiement=erreur&ref=${payment.reference}`
   };
-  if (env.SINGPAY_DISBURSEMENT) body.disbursement = env.SINGPAY_DISBURSEMENT;
+  if (sp(env, 'SINGPAY_DISBURSEMENT')) body.disbursement = sp(env, 'SINGPAY_DISBURSEMENT');
   try {
     const r = await singpayCall(env, 'POST', '/ext', body);
     const link = r && r.link;
