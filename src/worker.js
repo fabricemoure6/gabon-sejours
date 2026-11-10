@@ -735,6 +735,23 @@ export default {
       if (p.startsWith('/api/admin/')) {
         if (!isAdmin(user)) return bad('Accès réservé à l\'administrateur', 403);
 
+        // Diagnostic SingPay (admin) : ne renvoie jamais les clés, seulement des statuts et des longueurs
+        if (method === 'GET' && p === '/api/admin/singpay-check') {
+          const out = {
+            configured: singpayOn(env), base: env.SINGPAY_BASE_URL || SINGPAY_BASE,
+            lengths: { client_id: sp(env, 'SINGPAY_CLIENT_ID').length, client_secret: sp(env, 'SINGPAY_CLIENT_SECRET').length,
+              wallet: sp(env, 'SINGPAY_WALLET').length, disbursement: sp(env, 'SINGPAY_DISBURSEMENT').length },
+            raw_has_whitespace: ['SINGPAY_CLIENT_ID', 'SINGPAY_CLIENT_SECRET', 'SINGPAY_WALLET', 'SINGPAY_DISBURSEMENT']
+              .filter(k => env[k] && String(env[k]) !== String(env[k]).trim())
+          };
+          if (out.configured) {
+            try {
+              const w = await singpayCall(env, 'GET', '/portefeuille/api/' + encodeURIComponent(sp(env, 'SINGPAY_WALLET')));
+              out.wallet_lookup = { ok: true, nom: w && w.nom, status: w && w.status, callbackURL: w && w.callbackURL };
+            } catch (e) { out.wallet_lookup = { ok: false, error: e.message.slice(0, 200) }; }
+          }
+          return json(out);
+        }
         if (method === 'GET' && p === '/api/admin/overview') {
           const c = async sql => (await env.DB.prepare(sql).first()).n;
           return json({
